@@ -720,7 +720,7 @@ html, body {
     left: 50%;
     transform: translate(-50%, -50%);
     width: 70px;
-    height: 70px;
+    height: 35px;
     background-color: white;
     padding: 8px;
     border-radius: 8px;
