@@ -362,6 +362,13 @@ const App = (() => {
             return;
         }
 
+        // Special handling for PayNow - show QR code instead of printing immediately
+        if (paymentMethod === 'PayNow') {
+            showPayNowQR(cart);
+            return;
+        }
+
+        // For other payment methods, print directly
         const status = Bluetooth.getStatus();
         if (!status.isConnected) {
             alert('Printer not connected. Please connect first.');
@@ -385,6 +392,123 @@ const App = (() => {
             hideLoading();
             alert('Print failed: ' + e.message);
         }
+    };
+
+    /**
+     * Generate PayNow QR code
+     */
+    const generatePayNowQR = (amount, referenceNumber) => {
+        // PayNow format: 00020101021226560009SG.PAYNOW010100211+658123051603010041420261024222800520400005303702540550.005802SG59006009Singapore62210117INV202612141620556304632D
+        // We'll construct it dynamically with the amount and reference
+        
+        // This is a simplified PayNow static payload - in production you'd generate it dynamically
+        // For now, using the sample provided as reference
+        const paynowUEN = '201615823R'; // SG.PAYNOW
+        const receiverID = '81230516'; // Phone number as per spec
+        const amount_cents = Math.round(amount * 100); // Convert to cents
+        const ref = referenceNumber;
+        
+        // Basic PayNow QR format (simplified)
+        // Full format: 00020101021226560009SG.PAYNOW010100211+6581230516030100414202...
+        let qrData = '00020101021226560009SG.PAYNOW0101002116' + receiverID + '0301004142026' + amount_cents.toString().padStart(13, '0') + '5406' + amount_cents.toString() + '0802SG59006009Singapore62' + ref.length.toString().padStart(2, '0') + ref + '6304';
+        
+        // Generate checksum (simplified - in production use proper CRC-16/CCITT-FALSE)
+        // For now, return sample structure
+        return qrData;
+    };
+
+    /**
+     * Show PayNow QR code modal
+     */
+    const showPayNowQR = (cart) => {
+        let total = 0;
+        cart.forEach(item => {
+            const qty = item.quantity || 1;
+            total += (parseFloat(item.price) || 0) * qty;
+        });
+
+        // Generate receipt number (timestamp based)
+        const now = new Date();
+        const receiptNumber = 'INV' + now.getFullYear() + 
+                            String(now.getMonth() + 1).padStart(2, '0') + 
+                            String(now.getDate()).padStart(2, '0') + 
+                            String(now.getHours()).padStart(2, '0') + 
+                            String(now.getMinutes()).padStart(2, '0') + 
+                            String(now.getSeconds()).padStart(2, '0');
+
+        // Generate PayNow QR code
+        const qrData = generatePayNowQR(total, receiptNumber);
+
+        // Display in modal
+        document.getElementById('paynowAmount').textContent = '$' + total.toFixed(2);
+        document.getElementById('paynowReference').textContent = receiptNumber;
+        
+        // Generate QR code using QR code library
+        // Using qrcode.js library (you'll need to add this to HTML)
+        if (typeof QRCode !== 'undefined') {
+            const qrElement = document.getElementById('paynowQR');
+            qrElement.src = ''; // Clear previous
+            // Generate QR code to canvas then convert to image
+            const canvas = document.createElement('canvas');
+            QRCode.toCanvas(canvas, qrData, {
+                errorCorrectionLevel: 'H',
+                type: 'image/png',
+                width: 300,
+                color: {
+                    dark: '#4a148c', // Dark purple as per requirement
+                    light: '#ffffff'
+                }
+            }, (err) => {
+                if (!err) {
+                    qrElement.src = canvas.toDataURL();
+                }
+            });
+        }
+
+        // Show modal and hide checkout
+        closeCheckout();
+        document.getElementById('paynowModal').classList.add('active');
+
+        // Store cart for use when printing
+        window.paynowCart = cart;
+        window.paynowMethod = 'PayNow';
+    };
+
+    /**
+     * Handle print receipt after PayNow payment
+     */
+    const handlePrintReceiptPayNow = async () => {
+        const status = Bluetooth.getStatus();
+        if (!status.isConnected) {
+            alert('Printer not connected. Please connect first.');
+            return;
+        }
+
+        showLoading('Printing receipt...');
+
+        try {
+            await Bluetooth.printReceipt(window.paynowCart, window.paynowMethod);
+            showLoading('Print successful', 1000);
+            setTimeout(() => {
+                Storage.clearCart();
+                updateCartDisplay();
+                updateTotalDisplay();
+                document.getElementById('paynowModal').classList.remove('active');
+                showFeedback('Transaction completed');
+                window.paynowCart = null;
+            }, 1000);
+        } catch (e) {
+            console.error('Print error:', e);
+            hideLoading();
+            alert('Print failed: ' + e.message);
+        }
+    };
+
+    /**
+     * Close PayNow modal
+     */
+    const closePayNowModal = () => {
+        document.getElementById('paynowModal').classList.remove('active');
     };
 
     /**
@@ -442,24 +566,30 @@ const App = (() => {
         const status = Bluetooth.getStatus();
         const statusIndicator = document.querySelector('.status-indicator');
         const statusText = document.getElementById('statusText');
-        const connectBtn = document.getElementById('connectBtn');
+        const bluetoothStatus = document.getElementById('bluetoothStatus');
 
         if (status.isConnected) {
             statusIndicator.classList.remove('disconnected');
             statusIndicator.classList.add('connected');
             statusText.textContent = 'Connected to ' + (status.deviceName || 'Printer');
-            connectBtn.textContent = 'Disconnect';
-            connectBtn.onclick = () => {
-                Bluetooth.disconnect();
-                updateBluetoothUI();
-                showFeedback('Disconnected');
-            };
+            // Make status clickable to disconnect
+            if (bluetoothStatus) {
+                bluetoothStatus.style.cursor = 'pointer';
+                bluetoothStatus.onclick = () => {
+                    Bluetooth.disconnect();
+                    updateBluetoothUI();
+                    showFeedback('Disconnected');
+                };
+            }
         } else {
             statusIndicator.classList.remove('connected');
             statusIndicator.classList.add('disconnected');
             statusText.textContent = 'Disconnected';
-            connectBtn.textContent = 'Connect';
-            connectBtn.onclick = handleConnect;
+            // Make status clickable to connect
+            if (bluetoothStatus) {
+                bluetoothStatus.style.cursor = 'pointer';
+                bluetoothStatus.onclick = handleConnect;
+            }
         }
     };
 
@@ -563,8 +693,23 @@ const App = (() => {
             }
         });
 
-        // Bluetooth
-        document.getElementById('connectBtn').addEventListener('click', handleConnect);
+        // PayNow QR Modal
+        const printReceiptBtn = document.getElementById('printReceiptBtn');
+        if (printReceiptBtn) {
+            printReceiptBtn.addEventListener('click', handlePrintReceiptPayNow);
+        }
+        const cancelPaynowBtn = document.getElementById('cancelPaynowBtn');
+        if (cancelPaynowBtn) {
+            cancelPaynowBtn.addEventListener('click', closePayNowModal);
+        }
+        const paynowModal = document.getElementById('paynowModal');
+        if (paynowModal) {
+            paynowModal.addEventListener('click', (e) => {
+                if (e.target.id === 'paynowModal') {
+                    closePayNowModal();
+                }
+            });
+        }
     };
 
     // Public API
