@@ -260,11 +260,19 @@ const App = (() => {
         if (key === 'backspace') {
             value = value.slice(0, -1);
         } else if (key === '.') {
-            if (!value.includes('.')) {
+            // Only add decimal if there's already a value and no decimal exists
+            if (value && !value.includes('.')) {
                 value += '.';
+            } else if (!value) {
+                value = '0.';
             }
         } else if (key >= '0' && key <= '9') {
-            value += key;
+            // If value is "0.00" or just "0", replace it with the new digit
+            if (value === '0.00' || value === '0') {
+                value = key;
+            } else {
+                value += key;
+            }
         }
 
         input.value = value || '0.00';
