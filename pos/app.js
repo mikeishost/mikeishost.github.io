@@ -517,8 +517,7 @@ const App = (() => {
         // Cart Modal
         const totalDisplay = document.getElementById('totalDisplay');
         if (totalDisplay) {
-            totalDisplay.addEventListener('click', openCartModal);
-            totalDisplay.addEventListener('touchend', (e) => {
+            totalDisplay.addEventListener('click', (e) => {
                 e.preventDefault();
                 openCartModal();
             });
