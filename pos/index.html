@@ -7,20 +7,6 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <!-- Header with Bluetooth Status -->
-    <header class="header">
-        <div class="header-left">
-            <h1>St. Thomas POS</h1>
-        </div>
-        <div class="header-right">
-            <div class="bluetooth-status" id="bluetoothStatus">
-                <span class="status-indicator disconnected"></span>
-                <span id="statusText">Disconnected</span>
-            </div>
-            <button class="btn btn-connect" id="connectBtn">Connect</button>
-        </div>
-    </header>
-
     <!-- Main Content -->
     <main class="main-content">
         <!-- Word Cloud Selectors -->
@@ -58,19 +44,11 @@
                 <button class="btn btn-add-custom" id="addCustomBtn">Add</button>
             </div>
         </section>
-
-        <!-- Cart Section -->
-        <section class="cart-section">
-            <h2>Cart</h2>
-            <div class="cart-list" id="cartList">
-                <!-- Generated dynamically -->
-            </div>
-        </section>
     </main>
 
     <!-- Action Bar (Fixed Bottom) -->
     <footer class="action-bar">
-        <div class="total-display">
+        <div class="total-display" id="totalDisplay">
             <span class="total-label">Total:</span>
             <span class="total-amount" id="totalAmount">$0.00</span>
         </div>
@@ -78,24 +56,30 @@
         <button class="btn btn-checkout" id="checkoutBtn">Checkout</button>
     </footer>
 
-    <!-- Edit Item Modal -->
-    <div class="modal" id="editModal">
-        <div class="modal-content">
-            <h2>Edit Item</h2>
-            <form id="editForm">
-                <div class="form-group">
-                    <label for="editName">Item Name:</label>
-                    <input type="text" id="editName" required>
+    <!-- Cart Modal (Popup) -->
+    <div class="modal" id="cartModal">
+        <div class="modal-content cart-modal-content">
+            <!-- Connection Status Header -->
+            <div class="cart-modal-header">
+                <h2>Cart & Setup</h2>
+                <div class="bluetooth-status" id="bluetoothStatus">
+                    <span class="status-indicator disconnected"></span>
+                    <span id="statusText">Disconnected</span>
                 </div>
-                <div class="form-group">
-                    <label for="editPrice">Price:</label>
-                    <input type="number" id="editPrice" step="0.01" min="0" required>
-                </div>
-                <div class="form-actions">
-                    <button type="submit" class="btn btn-save">Save</button>
-                    <button type="button" class="btn btn-cancel" id="cancelEditBtn">Cancel</button>
-                </div>
-            </form>
+            </div>
+
+            <!-- Bluetooth Connection Button -->
+            <div class="bluetooth-controls">
+                <button class="btn btn-connect" id="connectBtn">Connect Printer</button>
+            </div>
+
+            <!-- Cart Items -->
+            <div class="cart-list" id="cartList">
+                <!-- Generated dynamically -->
+            </div>
+
+            <!-- Close Button -->
+            <button class="btn btn-close-cart" id="closeCartBtn">Close</button>
         </div>
     </div>
 
