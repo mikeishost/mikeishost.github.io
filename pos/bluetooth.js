@@ -36,9 +36,20 @@ const Bluetooth = (() => {
                 const devices = await navigator.bluetooth.getDevices();
                 const paired = devices.find(d => d.id === pairedId);
 
-                if (paired && paired.gatt.connected) {
-                    console.log('Reconnecting to paired device:', pairedId);
-                    return await connectToDevice(paired);
+                if (paired) {
+                    console.log('Found paired device:', pairedId);
+                    
+                    // If device is not already connected, connect to it
+                    if (!paired.gatt.connected) {
+                        console.log('Reconnecting to paired device:', pairedId);
+                        return await connectToDevice(paired);
+                    } else {
+                        // Device already connected, update state
+                        console.log('Device already connected');
+                        connectedDevice = paired;
+                        isConnected = true;
+                        return true;
+                    }
                 }
             }
         } catch (e) {
@@ -125,6 +136,17 @@ const Bluetooth = (() => {
             // Store paired printer ID
             Storage.setPairedPrinterId(device.id);
 
+            // Add disconnection listener to track device state
+            device.addEventListener('gattserverdisconnected', () => {
+                console.log('Device disconnected: ' + device.name);
+                isConnected = false;
+                connectedDevice = null;
+                connectedCharacteristic = null;
+                
+                // Optionally trigger UI update callback here if available
+                console.warn('Bluetooth device lost connection. Please reconnect.');
+            });
+
             console.log('Device connected successfully:', device.name);
             return true;
         } catch (e) {
@@ -165,12 +187,20 @@ const Bluetooth = (() => {
 
     /**
      * Send receipt to printer with chunking and delays
-     * CRITICAL: Splits into 100-byte chunks with 50-100ms delays
+     * CRITICAL: Splits into 100-byte chunks with 75ms delays
+     * SAFETY: Validates device connection before and during transmission
      */
     const sendReceipt = async (receiptData) => {
-        if (!isConnected || !connectedCharacteristic) {
+        if (!isConnected || !connectedCharacteristic || !connectedDevice) {
             console.error('Not connected to printer');
             throw new Error('Printer not connected');
+        }
+
+        // Verify device is still connected
+        if (!connectedDevice.gatt.connected) {
+            isConnected = false;
+            connectedCharacteristic = null;
+            throw new Error('Device disconnected unexpectedly');
         }
 
         if (!receiptData || receiptData.length === 0) {
@@ -186,8 +216,13 @@ const Bluetooth = (() => {
 
             // Send receipt in chunks
             for (let i = 0; i < receiptData.length; i += CHUNK_SIZE) {
-                const chunk = receiptData.slice(i, i + CHUNK_SIZE);
+                // Check connection before each chunk
+                if (!connectedDevice.gatt.connected) {
+                    isConnected = false;
+                    throw new Error('Device disconnected during transmission');
+                }
 
+                const chunk = receiptData.slice(i, i + CHUNK_SIZE);
                 console.log(`Sending chunk ${Math.floor(i / CHUNK_SIZE) + 1}: ${chunk.length} bytes`);
 
                 await connectedCharacteristic.writeValue(chunk);
@@ -202,18 +237,41 @@ const Bluetooth = (() => {
             return true;
         } catch (e) {
             console.error('Error sending receipt:', e);
+            isConnected = false;
             throw e;
         }
     };
 
     /**
-     * Print receipt: connect, generate, send, disconnect
+     * Print receipt: generate, validate, and send
      */
     const printReceipt = async (cartItems, paymentMethod) => {
         try {
+            // Validate input
+            if (!cartItems || !Array.isArray(cartItems)) {
+                throw new Error('Invalid cart items');
+            }
+
+            if (cartItems.length === 0) {
+                throw new Error('Cart is empty');
+            }
+
+            // Validate each item
+            for (let item of cartItems) {
+                if (!item.name || item.name.trim() === '') {
+                    throw new Error('Invalid item: missing name');
+                }
+                if (item.price === null || item.price === undefined || isNaN(item.price)) {
+                    throw new Error(`Invalid item "${item.name}": missing or invalid price`);
+                }
+                if (item.quantity && item.quantity < 1) {
+                    throw new Error(`Invalid item "${item.name}": quantity must be >= 1`);
+                }
+            }
+
             // Generate receipt as Uint8Array
             const receiptData = Receipt.generateReceipt(cartItems, paymentMethod);
-            if (!receiptData) {
+            if (!receiptData || receiptData.length === 0) {
                 throw new Error('Failed to generate receipt');
             }
 

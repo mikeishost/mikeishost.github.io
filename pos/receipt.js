@@ -161,11 +161,15 @@ const Receipt = (() => {
         let total = 0;
         for (let i = 0; i < cartItems.length; i++) {
             const item = cartItems[i];
-            const price = parseFloat(item.price) || 0;
-            total += price;
+            const qty = item.quantity || 1;
+            const unitPrice = parseFloat(item.price) || 0;
+            const lineTotal = unitPrice * qty;
+            total += lineTotal;
 
-            const priceStr = formatPrice(price);
-            const line = padLine(item.name, priceStr);
+            // Format item name with quantity if > 1
+            const itemName = qty > 1 ? `${item.name} x${qty}` : item.name;
+            const priceStr = formatPrice(lineTotal);
+            const line = padLine(itemName, priceStr);
             receiptBytes.push(stringToBytes(line));
             receiptBytes.push(COMMANDS.LINEFEED);
         }

@@ -388,9 +388,26 @@ const App = (() => {
                 showFeedback('Transaction completed');
             }, 1000);
         } catch (e) {
-            console.error('Print error:', e);
             hideLoading();
-            alert('Print failed: ' + e.message);
+            console.error('Print error:', e);
+            
+            // Offer retry or recovery options
+            if (confirm('Print failed: ' + e.message + '\n\nRetry?')) {
+                handlePayment(paymentMethod);  // Retry
+            } else {
+                // Ask if user wants to keep items for manual retry or start over
+                closeCheckout();  // Close dialog to see cart
+                if (confirm('Keep items in cart for another retry, or clear and start over?\n\nOK = Keep items\nCancel = Clear cart')) {
+                    // User chose to keep items
+                    showFeedback('Cart retained. Try connecting printer again.');
+                } else {
+                    // User chose to clear
+                    Storage.clearCart();
+                    updateCartDisplay();
+                    updateTotalDisplay();
+                    showFeedback('Cart cleared');
+                }
+            }
         }
     };
 
@@ -583,6 +600,20 @@ const App = (() => {
     const checkBluetoothStatus = async () => {
         if (!Bluetooth.isAvailable()) {
             console.error('Web Bluetooth not available');
+            
+            // Update UI to show Bluetooth is not supported
+            const statusText = document.getElementById('statusText');
+            if (statusText) {
+                statusText.textContent = 'Bluetooth not supported on this browser';
+                statusText.style.color = '#d33427';  // danger red
+            }
+            
+            const bluetoothStatus = document.getElementById('bluetoothStatus');
+            if (bluetoothStatus) {
+                bluetoothStatus.style.opacity = '0.5';
+                bluetoothStatus.style.cursor = 'not-allowed';
+                bluetoothStatus.title = 'Web Bluetooth not supported. Use Chrome, Edge, or Opera on Android/iOS.';
+            }
             return;
         }
 
@@ -605,11 +636,16 @@ const App = (() => {
                 setTimeout(() => hideLoading(), 1000);
             } else {
                 hideLoading();
-                alert('Connection failed');
+                // User likely cancelled, no need for alert
             }
         } catch (e) {
             hideLoading();
-            console.error('Connection error:', e);
+            
+            // Only show alert for actual errors, not user cancellations
+            if (e.name !== 'NotFoundError') {
+                console.error('Connection error:', e);
+                alert('Connection error: ' + e.message);
+            }
         }
     };
 
