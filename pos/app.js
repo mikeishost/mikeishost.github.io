@@ -518,6 +518,10 @@ const App = (() => {
         const totalDisplay = document.getElementById('totalDisplay');
         if (totalDisplay) {
             totalDisplay.addEventListener('click', openCartModal);
+            totalDisplay.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                openCartModal();
+            });
         }
         const closeCartBtn = document.getElementById('closeCartBtn');
         if (closeCartBtn) {
