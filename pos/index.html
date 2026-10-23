@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>St. Thomas POS</title>
     <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode.js/1.5.3/qrcode.min.js"></script>
 </head>
 <body>
     <!-- Main Content -->
@@ -61,16 +62,11 @@
         <div class="modal-content cart-modal-content">
             <!-- Connection Status Header -->
             <div class="cart-modal-header">
-                <h2>Cart & Setup</h2>
+                <h2>Cart</h2>
                 <div class="bluetooth-status" id="bluetoothStatus">
                     <span class="status-indicator disconnected"></span>
                     <span id="statusText">Disconnected</span>
                 </div>
-            </div>
-
-            <!-- Bluetooth Connection Button -->
-            <div class="bluetooth-controls">
-                <button class="btn btn-connect" id="connectBtn">Connect Printer</button>
             </div>
 
             <!-- Cart Items -->
@@ -78,8 +74,8 @@
                 <!-- Generated dynamically -->
             </div>
 
-            <!-- Close Button -->
-            <button class="btn btn-close-cart" id="closeCartBtn">Close</button>
+            <!-- Cancel Button -->
+            <button class="btn btn-cancel" id="closeCartBtn">Close</button>
         </div>
     </div>
 
@@ -98,6 +94,31 @@
                 <button class="btn btn-payment" data-payment="Visa/Mastercard">Visa/Mastercard</button>
             </div>
             <button class="btn btn-cancel" id="cancelCheckoutBtn">Cancel</button>
+        </div>
+    </div>
+
+    <!-- PayNow QR Code Modal -->
+    <div class="modal" id="paynowModal">
+        <div class="modal-content paynow-modal-content">
+            <h2>PayNow QR Code</h2>
+            <div class="paynow-container">
+                <div class="paynow-info">
+                    <div class="paynow-amount">
+                        <span class="label">Amount:</span>
+                        <span class="value" id="paynowAmount">$0.00</span>
+                    </div>
+                    <div class="paynow-reference">
+                        <span class="label">Reference:</span>
+                        <span class="value" id="paynowReference">INV0000000000</span>
+                    </div>
+                </div>
+                <div class="paynow-qr-container">
+                    <img src="" id="paynowQR" alt="PayNow QR Code" class="paynow-qr">
+                    <img src="paynow-logo.png" alt="PayNow" class="paynow-logo">
+                </div>
+            </div>
+            <button class="btn btn-success" id="printReceiptBtn">Print Receipt</button>
+            <button class="btn btn-cancel" id="cancelPaynowBtn">Cancel</button>
         </div>
     </div>
 
