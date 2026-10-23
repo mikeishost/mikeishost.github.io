@@ -1,0 +1,700 @@
+/* ============================================
+   GLOBAL STYLES & VARIABLES
+   ============================================ */
+
+:root {
+    --primary-color: #1a73e8;
+    --primary-dark: #1565c0;
+    --secondary-color: #34a853;
+    --danger-color: #d33427;
+    --warning-color: #fbbc04;
+    --background: #f8f9fa;
+    --surface: #ffffff;
+    --text-primary: #202124;
+    --text-secondary: #5f6368;
+    --border-color: #dadce0;
+    --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background-color: var(--background);
+    color: var(--text-primary);
+    overflow: hidden;
+}
+
+/* ============================================
+   HEADER
+   ============================================ */
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: var(--primary-color);
+    color: white;
+    padding: 12px 16px;
+    box-shadow: var(--shadow);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.header h1 {
+    font-size: 24px;
+    font-weight: 600;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.bluetooth-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.status-indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+.status-indicator.connected {
+    background-color: #34a853;
+    box-shadow: 0 0 8px rgba(52, 168, 83, 0.6);
+}
+
+.status-indicator.disconnected {
+    background-color: #ea4335;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.6;
+    }
+}
+
+/* ============================================
+   BUTTONS
+   ============================================ */
+
+.btn {
+    padding: 12px 16px;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    touch-action: manipulation;
+    user-select: none;
+}
+
+.btn:active {
+    transform: scale(0.98);
+}
+
+.btn-connect {
+    background-color: white;
+    color: var(--primary-color);
+    font-weight: 600;
+    min-width: 90px;
+}
+
+.btn-connect:hover {
+    background-color: #f1f3f4;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-dark);
+}
+
+.btn-success {
+    background-color: var(--secondary-color);
+    color: white;
+}
+
+.btn-success:hover {
+    background-color: #2d8e47;
+}
+
+.btn-danger {
+    background-color: var(--danger-color);
+    color: white;
+}
+
+.btn-danger:hover {
+    background-color: #b71c1c;
+}
+
+.btn-clear, .btn-cancel {
+    background-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+.btn-clear:hover, .btn-cancel:hover {
+    background-color: #c6c6c6;
+}
+
+.btn-checkout, .btn-add-custom, .btn-save {
+    background-color: var(--secondary-color);
+    color: white;
+    width: 100%;
+}
+
+.btn-checkout:hover, .btn-add-custom:hover, .btn-save:hover {
+    background-color: #2d8e47;
+}
+
+.btn-payment {
+    width: 100%;
+    padding: 16px;
+    font-size: 16px;
+    font-weight: 600;
+    background-color: var(--primary-color);
+    color: white;
+    margin-bottom: 12px;
+}
+
+.btn-payment:hover {
+    background-color: var(--primary-dark);
+}
+
+/* ============================================
+   MAIN CONTENT AREA
+   ============================================ */
+
+.main-content {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 60px - 80px);
+    overflow-y: auto;
+    padding: 16px;
+    gap: 16px;
+}
+
+/* ============================================
+   WORD CLOUD SECTION
+   ============================================ */
+
+.word-cloud-section {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    background-color: var(--surface);
+    padding: 12px;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+}
+
+.word-cloud {
+    display: flex;
+    align-items: center;
+}
+
+.word-line {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    flex: 1;
+    padding-right: 8px;
+    align-items: center;
+}
+
+.word-line::-webkit-scrollbar {
+    height: 4px;
+}
+
+.word-line::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.word-line::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 2px;
+}
+
+.word-button {
+    padding: 8px 12px;
+    background-color: var(--background);
+    border: 2px solid var(--border-color);
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+    touch-action: manipulation;
+    user-select: none;
+}
+
+.word-button:active {
+    transform: scale(0.95);
+}
+
+.word-button.selected {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.word-button.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.word-button-add {
+    padding: 8px 12px;
+    background-color: var(--secondary-color);
+    color: white;
+    border: none;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+    touch-action: manipulation;
+}
+
+.word-button-add:active {
+    transform: scale(0.95);
+    background-color: #2d8e47;
+}
+
+/* ============================================
+   MANUAL ENTRY KEYPAD
+   ============================================ */
+
+.manual-entry {
+    flex-shrink: 0;
+    background-color: var(--surface);
+    padding: 16px;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+}
+
+.amount-input {
+    width: 100%;
+    padding: 16px;
+    font-size: 24px;
+    font-weight: 700;
+    text-align: right;
+    border: 2px solid var(--border-color);
+    border-radius: 4px;
+    margin-bottom: 12px;
+    color: var(--primary-color);
+    background-color: var(--background);
+}
+
+.keypad-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.key {
+    padding: 16px;
+    font-size: 18px;
+    font-weight: 600;
+    background-color: var(--background);
+    border: 2px solid var(--border-color);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.key:active {
+    background-color: var(--border-color);
+    transform: scale(0.95);
+}
+
+.key.backspace {
+    background-color: var(--danger-color);
+    color: white;
+    border-color: var(--danger-color);
+}
+
+/* ============================================
+   CART SECTION
+   ============================================ */
+
+.cart-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.cart-section h2 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.cart-list {
+    flex: 1;
+    overflow-y: auto;
+    background-color: var(--surface);
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+}
+
+.cart-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-color);
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.cart-item:last-child {
+    border-bottom: none;
+}
+
+.cart-item-details {
+    flex: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.cart-item-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.cart-item-price {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--primary-color);
+    margin-left: 12px;
+}
+
+.cart-item-quantity {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: 12px;
+}
+
+.qty-btn {
+    width: 28px;
+    height: 28px;
+    background-color: var(--background);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: var(--text-primary);
+}
+
+.qty-btn:active {
+    transform: scale(0.9);
+    background-color: var(--border-color);
+}
+
+.qty-display {
+    min-width: 30px;
+    text-align: center;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.cart-item-remove {
+    width: 36px;
+    height: 36px;
+    background-color: var(--danger-color);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-left: 12px;
+}
+
+.cart-item-remove:active {
+    transform: scale(0.9);
+}
+
+.cart-empty {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+/* ============================================
+   ACTION BAR (FIXED BOTTOM)
+   ============================================ */
+
+.action-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    background-color: var(--surface);
+    padding: 12px 16px;
+    border-top: 1px solid var(--border-color);
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    height: 80px;
+    flex-wrap: wrap;
+}
+
+.total-display {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.total-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.total-amount {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.action-bar .btn {
+    flex: 1;
+    min-width: 80px;
+    height: 48px;
+}
+
+/* ============================================
+   MODAL
+   ============================================ */
+
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    justify-content: center;
+    align-items: center;
+    z-index: 200;
+}
+
+.modal.active {
+    display: flex;
+}
+
+.modal-content {
+    background-color: var(--surface);
+    border-radius: 8px;
+    padding: 24px;
+    max-width: 90%;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: var(--shadow-lg);
+    animation: slideUp 0.3s ease;
+}
+
+.checkout-modal-content {
+    max-width: 400px;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.modal h2 {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 16px;
+}
+
+.form-group {
+    margin-bottom: 16px;
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group label {
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 6px;
+    color: var(--text-secondary);
+}
+
+.form-group input {
+    padding: 12px;
+    font-size: 16px;
+    border: 2px solid var(--border-color);
+    border-radius: 4px;
+    transition: border-color 0.2s ease;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+.form-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.form-actions .btn {
+    flex: 1;
+}
+
+.checkout-total {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 24px;
+    text-align: center;
+}
+
+.checkout-label {
+    font-size: 14px;
+    color: var(--text-secondary);
+    font-weight: 500;
+    margin-bottom: 6px;
+}
+
+.checkout-amount {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.payment-buttons {
+    margin-bottom: 16px;
+}
+
+/* ============================================
+   LOADING OVERLAY
+   ============================================ */
+
+.loading-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    justify-content: center;
+    align-items: center;
+    z-index: 300;
+}
+
+.loading-overlay.active {
+    display: flex;
+}
+
+.loading-overlay > div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid rgba(255, 255, 255, 0.3);
+    border-top: 4px solid white;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 16px;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.loading-overlay p {
+    color: white;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+/* ============================================
+   RESPONSIVE ADJUSTMENTS
+   ============================================ */
+
+@media (min-width: 600px) {
+    .grid-container {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (min-width: 900px) {
+    .grid-container {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+/* ============================================
+   TOUCH & ACCESSIBILITY
+   ============================================ */
+
+button {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+}
+
+input {
+    -webkit-user-select: text;
+    user-select: text;
+}
