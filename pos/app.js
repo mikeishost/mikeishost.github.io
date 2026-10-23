@@ -4,8 +4,7 @@
  */
 
 const App = (() => {
-    let selec    /**
-     * Handle edit form submission';
+    let selectedLine1 = 'Perfume';
     let selectedLine2 = 'N/A';
 
     /**
@@ -314,7 +313,8 @@ const App = (() => {
 
         let total = 0;
         cart.forEach(item => {
-            total += parseFloat(item.price) || 0;
+            const qty = item.quantity || 1;
+            total += (parseFloat(item.price) || 0) * qty;
         });
 
         document.getElementById('checkoutAmount').textContent = '$' + total.toFixed(2);
@@ -326,6 +326,21 @@ const App = (() => {
      */
     const closeCheckout = () => {
         document.getElementById('checkoutModal').classList.remove('active');
+    };
+
+    /**
+     * Open cart modal (triggered by clicking Total)
+     */
+    const openCartModal = () => {
+        updateCartDisplay();
+        document.getElementById('cartModal').classList.add('active');
+    };
+
+    /**
+     * Close cart modal
+     */
+    const closeCartModal = () => {
+        document.getElementById('cartModal').classList.remove('active');
     };
 
     /**
@@ -499,7 +514,25 @@ const App = (() => {
 
         document.getElementById('addCustomBtn').addEventListener('click', addCustomAmount);
 
-        // Cart
+        // Cart Modal
+        const totalDisplay = document.getElementById('totalDisplay');
+        if (totalDisplay) {
+            totalDisplay.addEventListener('click', openCartModal);
+        }
+        const closeCartBtn = document.getElementById('closeCartBtn');
+        if (closeCartBtn) {
+            closeCartBtn.addEventListener('click', closeCartModal);
+        }
+        const cartModal = document.getElementById('cartModal');
+        if (cartModal) {
+            cartModal.addEventListener('click', (e) => {
+                if (e.target.id === 'cartModal') {
+                    closeCartModal();
+                }
+            });
+        }
+
+        // Clear cart
         document.getElementById('clearBtn').addEventListener('click', clearCart);
 
         // Checkout
