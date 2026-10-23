@@ -482,14 +482,19 @@ html, body {
 }
 
 .total-display {
-    flex: 1;
+    flex: 0 0 auto;
     display: flex;
     flex-direction: column;
     justify-content: center;
     cursor: pointer;
-    padding: 8px;
+    padding: 8px 12px;
     border-radius: 4px;
     transition: background-color 0.2s;
+    min-width: 100px;
+    -webkit-tap-highlight-color: transparent;
+    pointer-events: auto;
+    touch-action: manipulation;
+    user-select: none;
 }
 
 .total-display:active {
