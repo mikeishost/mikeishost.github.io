@@ -501,6 +501,26 @@ html, body {
     background-color: rgba(26, 115, 232, 0.1);
 }
 
+.btn-total {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    background-color: transparent;
+    border: none;
+    padding: 8px 12px;
+    min-width: 80px;
+    height: auto;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.btn-total:active {
+    background-color: rgba(26, 115, 232, 0.1);
+}
+
 .total-label {
     font-size: 11px;
     color: var(--text-secondary);
