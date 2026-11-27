@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POS Setup & Testing Guide</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #1a73e8 0%, #1565c0 100%);
+            color: #333;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #1a73e8 0%, #1565c0 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+
+        main {
+            padding: 40px;
+        }
+
+        section {
+            margin-bottom: 40px;
+        }
+
+        section h2 {
+            font-size: 24px;
+            color: #1a73e8;
+            margin-bottom: 20px;
+            border-bottom: 3px solid #1a73e8;
+            padding-bottom: 10px;
+        }
+
+        .step {
+            background: #f8f9fa;
+            border-left: 4px solid #1a73e8;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+        }
+
+        .step h3 {
+            color: #1a73e8;
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+
+        .step p {
+            color: #555;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+
+        code {
+            background: #e8f0fe;
+            border: 1px solid #d2e3fc;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            color: #d63384;
+        }
+
+        .code-block {
+            background: #263238;
+            color: #aed581;
+            padding: 20px;
+            border-radius: 4px;
+            overflow-x: auto;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .warning {
+            background: #fff3cd;
+            border-left: 4px solid #fbbc04;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+
+        .success {
+            background: #e8f5e9;
+            border-left: 4px solid #34a853;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+
+        .info {
+            background: #e1f5fe;
+            border-left: 4px solid #1976d2;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+
+        .file-tree {
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.8;
+        }
+
+        .file-tree .folder {
+            color: #1976d2;
+            font-weight: bold;
+        }
+
+        .file-tree .file {
+            color: #558b2f;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .feature-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .feature-card h3 {
+            color: #1a73e8;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        .feature-card p {
+            color: #666;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .checklist {
+            list-style: none;
+            padding: 0;
+        }
+
+        .checklist li {
+            padding: 10px;
+            margin: 5px 0;
+            background: #f0f4f8;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+        }
+
+        .checklist li:before {
+            content: "✓";
+            color: #34a853;
+            font-weight: bold;
+            font-size: 18px;
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+
+        button {
+            background: #1a73e8;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 15px;
+        }
+
+        button:hover {
+            background: #1565c0;
+            box-shadow: 0 2px 8px rgba(26, 115, 232, 0.3);
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background: #f5f5f5;
+            font-weight: 600;
+            color: #1a73e8;
+        }
+
+        footer {
+            background: #263238;
+            color: #aed581;
+            text-align: center;
+            padding: 20px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚀 St. Thomas POS Setup Guide</h1>
+            <p>Bluefy-Compatible Serverless iOS Point of Sale Application</p>
+        </header>
+
+        <main>
+            <!-- Quick Start Section -->
+            <section>
+                <h2>⚡ Quick Start (5 Minutes)</h2>
+                <div class="step">
+                    <h3>Step 1: Deploy Files</h3>
+                    <p>Upload all files to an HTTPS-enabled web server:</p>
+                    <ul class="checklist">
+                        <li><code>index.html</code></li>
+                        <li><code>styles.css</code></li>
+                        <li><code>storage.js</code></li>
+                        <li><code>receipt.js</code></li>
+                        <li><code>bluetooth.js</code></li>
+                        <li><code>app.js</code></li>
+                    </ul>
+                </div>
+
+                <div class="step">
+                    <h3>Step 2: Open in Bluefy</h3>
+                    <p>On your iOS device:</p>
+                    <ol style="padding-left: 20px;">
+                        <li>Install <strong>Bluefy Web Browser</strong> from App Store</li>
+                        <li>Grant Bluetooth permissions when prompted</li>
+                        <li>Navigate to your HTTPS URL</li>
+                    </ol>
+                </div>
+
+                <div class="step">
+                    <h3>Step 3: Pair Printer</h3>
+                    <p>On the POS app:</p>
+                    <ol style="padding-left: 20px;">
+                        <li>Tap the <strong>"Connect"</strong> button</li>
+                        <li>Select your BLE thermal printer from the list</li>
+                        <li>Device ID will be saved for fast reconnection</li>
+                    </ol>
+                </div>
+            </section>
+
+            <!-- Features Section -->
+            <section>
+                <h2>✨ Core Features</h2>
+                <div class="features">
+                    <div class="feature-card">
+                        <h3>📱 Mobile-First UI</h3>
+                        <p>Touch-optimized interface designed specifically for iOS. Large buttons, smooth animations, and responsive layout.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>🛒 Smart Cart</h3>
+                        <p>Add/remove items instantly. Long-press to edit item names and prices. Changes saved to localStorage automatically.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>🔗 Web Bluetooth</h3>
+                        <p>Direct BLE connection to 58mm thermal printers. No intermediate servers. Completely offline-capable once loaded.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>💾 Persistent Storage</h3>
+                        <p>All data (items, cart, paired devices) saved to browser localStorage. Survives page reloads and app reopens.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>🖨️ Smart Print</h3>
+                        <p>Automatic chunking (100-byte chunks) prevents printer buffer overflow. ESC/POS formatted receipts with proper alignment.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>⚙️ Lightweight</h3>
+                        <p>Vanilla JavaScript, no frameworks or build tools. Fast loading, minimal dependencies, instant startup.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- System Requirements -->
+            <section>
+                <h2>📋 System Requirements</h2>
+                <table>
+                    <tr>
+                        <th>Component</th>
+                        <th>Requirement</th>
+                        <th>Notes</th>
+                    </tr>
+                    <tr>
+                        <td>iOS Version</td>
+                        <td>15.0 or higher</td>
+                        <td>Web Bluetooth API requires iOS 15+</td>
+                    </tr>
+                    <tr>
+                        <td>Browser</td>
+                        <td>Bluefy Web Browser</td>
+                        <td>Safari on iOS does not support Web Bluetooth</td>
+                    </tr>
+                    <tr>
+                        <td>Connection</td>
+                        <td>HTTPS (Secure)</td>
+                        <td>Web Bluetooth requires secure context</td>
+                    </tr>
+                    <tr>
+                        <td>Printer</td>
+                        <td>BLE Thermal (58mm)</td>
+                        <td>Generic Chinese printers compatible</td>
+                    </tr>
+                </table>
+                <div class="warning">
+                    <strong>⚠️ Important:</strong> HTTPS is mandatory for Web Bluetooth API. Your domain must have a valid SSL certificate.
+                </div>
+            </section>
+
+            <!-- File Structure -->
+            <section>
+                <h2>📁 Project Structure</h2>
+                <div class="file-tree">
+                    <div><span class="folder">POS/</span></div>
+                    <div style="padding-left: 20px;">
+                        <div><span class="file">index.html</span> - Main UI structure</div>
+                        <div><span class="file">styles.css</span> - Mobile responsive styling</div>
+                        <div><span class="file">storage.js</span> - localStorage state management</div>
+                        <div><span class="file">receipt.js</span> - Receipt & ESC/POS formatting</div>
+                        <div><span class="file">bluetooth.js</span> - Web Bluetooth wrapper & print logic</div>
+                        <div><span class="file">app.js</span> - Main application controller</div>
+                        <div><span class="file">README.md</span> - Full documentation</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Customization -->
+            <section>
+                <h2>🎨 Customization Guide</h2>
+
+                <div class="step">
+                    <h3>Change Store Name on Receipt</h3>
+                    <p>Edit <code>receipt.js</code>, find line ~92 and modify the header text:</p>
+                    <div class="code-block">
+// Change this line:
+receiptBytes.push(stringToBytes('St. Thomas @ Surprisesss'));
+
+// To your store name:
+receiptBytes.push(stringToBytes('Your Store Name Here'));
+                    </div>
+                </div>
+
+                <div class="step">
+                    <h3>Adjust Print Speed</h3>
+                    <p>If receipt cuts off, increase delay in <code>bluetooth.js</code>:</p>
+                    <div class="code-block">
+const DELAY_MS = 75; // Change to 100-150 for slower printers
+
+// Chunk size can also be adjusted:
+const CHUNK_SIZE = 100; // Decrease to 50-75 for tiny buffers
+                    </div>
+                </div>
+
+                <div class="step">
+                    <h3>Modify Default Items</h3>
+                    <p>Edit <code>storage.js</code>, line ~14:</p>
+                    <div class="code-block">
+const DEFAULT_ITEMS = [
+    { id: 1, name: 'Chicken Rice', price: 5.50 },
+    { id: 2, name: 'Pork Noodles', price: 6.00 },
+    // Add your items here
+];
+                    </div>
+                </div>
+
+                <div class="step">
+                    <h3>Change UI Colors</h3>
+                    <p>Edit <code>styles.css</code>, line ~8 (CSS variables):</p>
+                    <div class="code-block">
+:root {
+    --primary-color: #1a73e8;      /* Google Blue */
+    --secondary-color: #34a853;    /* Google Green */
+    --danger-color: #d33427;       /* Google Red */
+    /* ... more colors ... */
+}
+                    </div>
+                </div>
+            </section>
+
+            <!-- localStorage Schema -->
+            <section>
+                <h2>💾 localStorage Data Schema</h2>
+
+                <div class="step">
+                    <h3>Item Library (pos_itemLibrary)</h3>
+                    <p>Stores the available items for quick-add grid:</p>
+                    <div class="code-block">
+[
+  { id: 1, name: "Chicken Rice", price: 5.50 },
+  { id: 2, name: "Pork Noodles", price: 6.00 },
+  { id: 3, name: "Fish Soup", price: 7.50 }
+]
+                    </div>
+                </div>
+
+                <div class="step">
+                    <h3>Shopping Cart (pos_cart)</h3>
+                    <p>Current transaction items:</p>
+                    <div class="code-block">
+[
+  { id: "abc123", name: "Chicken Rice", price: 5.50 },
+  { id: "def456", name: "Custom Item", price: 15.00 }
+]
+                    </div>
+                </div>
+
+                <div class="step">
+                    <h3>Paired Printer (pos_pairedPrinterId)</h3>
+                    <p>Stored device ID for automatic reconnection:</p>
+                    <div class="code-block">
+"a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                    </div>
+                </div>
+            </section>
+
+            <!-- Troubleshooting -->
+            <section>
+                <h2>🔧 Troubleshooting</h2>
+
+                <div class="step">
+                    <h3>❌ "Web Bluetooth not available"</h3>
+                    <p>This means your browser doesn't support Web Bluetooth. Solution:</p>
+                    <ul style="padding-left: 20px;">
+                        <li>✅ Use <strong>Bluefy Web Browser</strong> on iOS</li>
+                        <li>⚠️ Standard Safari on iOS does NOT support Web Bluetooth</li>
+                        <li>ℹ️ On Android, use Chrome/Edge with Web Bluetooth enabled</li>
+                    </ul>
+                </div>
+
+                <div class="step">
+                    <h3>❌ Printer not found during scan</h3>
+                    <p>If your printer doesn't appear in the device list:</p>
+                    <ul style="padding-left: 20px;">
+                        <li>✅ Ensure printer is powered on</li>
+                        <li>✅ Check printer is in pairing/discovery mode</li>
+                        <li>✅ Move iOS device closer to printer</li>
+                        <li>✅ Restart Bluefy and try again</li>
+                        <li>✅ Restart printer if still not found</li>
+                    </ul>
+                </div>
+
+                <div class="step">
+                    <h3>❌ Print cuts off or incomplete</h3>
+                    <p>Printer buffer overflow is occurring. Try:</p>
+                    <ul style="padding-left: 20px;">
+                        <li>✅ Increase DELAY_MS in bluetooth.js (75 → 100-150ms)</li>
+                        <li>✅ Decrease CHUNK_SIZE in bluetooth.js (100 → 50-75 bytes)</li>
+                        <li>✅ Check printer specifications for buffer size</li>
+                    </ul>
+                </div>
+
+                <div class="step">
+                    <h3>❌ Receipt format looks wrong</h3>
+                    <p>Printer may not support standard ESC/POS. Check:</p>
+                    <ul style="padding-left: 20px;">
+                        <li>✅ Printer manual for ESC/POS command support</li>
+                        <li>✅ Try different text encodings (UTF-8 is default)</li>
+                        <li>✅ Test simple print commands via other apps</li>
+                    </ul>
+                </div>
+
+                <div class="step">
+                    <h3>❌ Cannot reconnect to paired printer</h3>
+                    <p>Auto-reconnection may not work in some cases:</p>
+                    <ul style="padding-left: 20px;">
+                        <li>✅ Tap "Connect" again to rescan and pair</li>
+                        <li>✅ Printer may have reset - re-pair if needed</li>
+                        <li>✅ Clear browser data to reset pairing (localStorage > pos_pairedPrinterId)</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Performance Tips -->
+            <section>
+                <h2>⚡ Performance Optimization Tips</h2>
+
+                <div class="success">
+                    <strong>✅ Why This App is Fast:</strong>
+                    <ul style="padding-left: 20px; margin-top: 10px;">
+                        <li>Zero build process - runs directly in browser</li>
+                        <li>No external dependencies or frameworks</li>
+                        <li>localStorage persists data instantly</li>
+                        <li>Direct BLE connection - no server latency</li>
+                        <li>Minimal CSS animations only when needed</li>
+                    </ul>
+                </div>
+
+                <div class="info">
+                    <strong>ℹ️ Further Optimization Options:</strong>
+                    <ul style="padding-left: 20px; margin-top: 10px;">
+                        <li>Cache entire app using Service Worker for offline mode</li>
+                        <li>Enable HTTP/2 Server Push for faster asset delivery</li>
+                        <li>Minify CSS/JS for smaller file sizes</li>
+                        <li>Use WebP images if adding store logos</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- ESC/POS Command Reference -->
+            <section>
+                <h2>🖨️ ESC/POS Command Reference</h2>
+                <table>
+                    <tr>
+                        <th>Command</th>
+                        <th>Hex Code</th>
+                        <th>Purpose</th>
+                    </tr>
+                    <tr>
+                        <td>INIT</td>
+                        <td><code>1B 40</code></td>
+                        <td>Initialize printer to default state</td>
+                    </tr>
+                    <tr>
+                        <td>CENTER</td>
+                        <td><code>1B 61 01</code></td>
+                        <td>Set center text alignment</td>
+                    </tr>
+                    <tr>
+                        <td>LEFT</td>
+                        <td><code>1B 61 00</code></td>
+                        <td>Set left text alignment</td>
+                    </tr>
+                    <tr>
+                        <td>BOLD ON</td>
+                        <td><code>1B 45 01</code></td>
+                        <td>Enable bold text font</td>
+                    </tr>
+                    <tr>
+                        <td>BOLD OFF</td>
+                        <td><code>1B 45 00</code></td>
+                        <td>Disable bold text font</td>
+                    </tr>
+                    <tr>
+                        <td>LINEFEED</td>
+                        <td><code>0A</code></td>
+                        <td>Move to next line</td>
+                    </tr>
+                    <tr>
+                        <td>CUT PAPER</td>
+                        <td><code>1D 56 42 00</code></td>
+                        <td>Cut paper at current position</td>
+                    </tr>
+                </table>
+                <div class="info">
+                    <strong>ℹ️ Note:</strong> If printer doesn't support certain commands, it will simply ignore them. The app gracefully handles unsupported features.
+                </div>
+            </section>
+
+            <!-- Support & Resources -->
+            <section>
+                <h2>📚 Resources & Support</h2>
+                <div class="step">
+                    <h3>Web Bluetooth Specification</h3>
+                    <p><a href="https://webbluetoothcg.github.io/web-bluetooth/" target="_blank">https://webbluetoothcg.github.io/web-bluetooth/</a></p>
+                    <p>Official W3C specification for Web Bluetooth API</p>
+                </div>
+
+                <div class="step">
+                    <h3>ESC/POS Printer Manual</h3>
+                    <p>Refer to your specific printer model's manual for complete command list and specifications.</p>
+                </div>
+
+                <div class="step">
+                    <h3>Bluefy Documentation</h3>
+                    <p>Visit Bluefy's official site for iOS-specific Web Bluetooth support details.</p>
+                </div>
+            </section>
+
+            <!-- Next Steps -->
+            <section>
+                <h2>🚀 Next Steps</h2>
+                <ol style="padding-left: 20px; line-height: 2;">
+                    <li><strong>Deploy:</strong> Upload files to HTTPS web server</li>
+                    <li><strong>Configure:</strong> Customize store name, items, and UI colors</li>
+                    <li><strong>Test:</strong> Open in Bluefy on iOS device</li>
+                    <li><strong>Pair:</strong> Connect to your thermal printer</li>
+                    <li><strong>Verify:</strong> Test a few transactions and print receipts</li>
+                    <li><strong>Deploy:</strong> Use in production!</li>
+                </ol>
+            </section>
+        </main>
+
+        <footer>
+            <p>St. Thomas POS - Built with Vanilla HTML5, CSS3 & ES6+ JavaScript</p>
+            <p style="margin-top: 10px; opacity: 0.8;">For Bluefy Web Browser on iOS 15+</p>
+        </footer>
+    </div>
+</body>
+</html>
