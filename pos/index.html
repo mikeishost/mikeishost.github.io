@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>St. Thomas POS</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.4/html5-qrcode.min.js"></script>
+</head>
+<body>
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Word Cloud Selectors -->
+        <section class="word-cloud-section">
+            <div class="word-cloud">
+                <div class="word-line" id="line1">
+                    <!-- Generated dynamically -->
+                </div>
+            </div>
+            <div class="word-cloud">
+                <div class="word-line" id="line2">
+                    <!-- Generated dynamically -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Manual Entry Section -->
+        <section class="manual-entry">
+            <div class="keypad">
+                <input type="text" id="customAmount" class="amount-input" placeholder="0.00" readonly>
+                <div class="keypad-grid">
+                    <button class="key" data-key="1">1</button>
+                    <button class="key" data-key="2">2</button>
+                    <button class="key" data-key="3">3</button>
+                    <button class="key" data-key="4">4</button>
+                    <button class="key" data-key="5">5</button>
+                    <button class="key" data-key="6">6</button>
+                    <button class="key" data-key="7">7</button>
+                    <button class="key" data-key="8">8</button>
+                    <button class="key" data-key="9">9</button>
+                    <button class="key" data-key="0">0</button>
+                    <button class="key" data-key=".">.</button>
+                    <button class="key backspace" data-key="backspace">⌫</button>
+                </div>
+                <button class="btn btn-add-custom" id="addCustomBtn">Add</button>
+            </div>
+        </section>
+    </main>
+
+    <!-- Action Bar (Fixed Bottom) -->
+    <footer class="action-bar">
+        <button class="btn btn-total" id="totalDisplay">
+            <span class="total-label">Total:</span>
+            <span class="total-amount" id="totalAmount">$0.00</span>
+        </button>
+        <button class="btn btn-clear" id="clearBtn">Clear</button>
+        <button class="btn btn-checkout" id="checkoutBtn">Checkout</button>
+    </footer>
+
+    <!-- Cart Modal (Popup) -->
+    <div class="modal" id="cartModal">
+        <div class="modal-content cart-modal-content">
+            <!-- Connection Status Header -->
+            <div class="cart-modal-header">
+                <h2>Cart</h2>
+                <div class="cart-modal-header-actions">
+                    <button class="btn btn-menu" id="menuBtn" type="button">Menu</button>
+                    <button class="bluetooth-status" id="bluetoothStatus" type="button" aria-label="Bluetooth status">
+                        <span class="status-indicator disconnected"></span>
+                        <span id="statusText">Disconnected</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Cart Items -->
+            <div class="cart-list" id="cartList">
+                <!-- Generated dynamically -->
+            </div>
+
+            <!-- Cart Actions -->
+            <div class="cart-modal-footer">
+                <button class="btn btn-clear" id="closeCartBtn" type="button">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Menu / Dashboard Modal -->
+    <div class="modal" id="menuModal">
+        <div class="modal-content menu-modal-content">
+            <div class="menu-modal-header">
+                <h2>Menu</h2>
+                <button class="btn btn-cancel menu-close-btn" id="closeMenuBtn" type="button">Close</button>
+            </div>
+            <div class="menu-grid">
+                <button class="menu-card" type="button" id="xReportMenuBtn">
+                    <span class="menu-card-title">X Report</span>
+                    <span class="menu-card-note">Live shift summary</span>
+                </button>
+                <button class="menu-card" type="button" id="zReportMenuBtn">
+                    <span class="menu-card-title">Z Report</span>
+                    <span class="menu-card-note">Close and print shift</span>
+                </button>
+                <button class="menu-card" type="button" id="historyMenuBtn">
+                    <span class="menu-card-title">History</span>
+                    <span class="menu-card-note">Transactions and export</span>
+                </button>
+                <button class="menu-card" type="button" id="setupMenuBtn">
+                    <span class="menu-card-title">Setup</span>
+                    <span class="menu-card-note">Receipt details</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Receipt Setup Modal -->
+    <div class="modal" id="setupModal">
+        <div class="modal-content setup-modal-content">
+            <div class="setup-modal-header">
+                <h2>Setup</h2>
+                <span class="paper-format-note">32 characters per line</span>
+            </div>
+            <div class="setup-form">
+                <label for="receiptName">Name</label>
+                <input id="receiptName" type="text" maxlength="32" autocomplete="organization">
+
+                <label for="receiptAddress1">Address line 1</label>
+                <input id="receiptAddress1" type="text" maxlength="32">
+
+                <label for="receiptAddress2">Address line 2</label>
+                <input id="receiptAddress2" type="text" maxlength="32">
+
+                <label for="receiptAddress3">Address line 3</label>
+                <input id="receiptAddress3" type="text" maxlength="32">
+
+                <label for="receiptPhone">Phone</label>
+                <input id="receiptPhone" type="tel" maxlength="27">
+            </div>
+            <div class="setup-modal-footer">
+                <button class="btn btn-clear" id="closeSetupBtn" type="button">Close</button>
+                <button class="btn btn-checkout" id="saveSetupBtn" type="button">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- X / Z Report Modal -->
+    <div class="modal" id="reportModal">
+        <div class="modal-content report-modal-content">
+            <div class="report-modal-header">
+                <div>
+                    <h2 id="reportTitle">X Report</h2>
+                    <span id="reportGeneratedAt" class="report-generated-at"></span>
+                </div>
+                <button class="btn btn-cancel report-close-btn" id="closeReportBtn" type="button">Close</button>
+            </div>
+
+            <div class="report-period">
+                <span>Period start</span>
+                <strong id="reportPeriodStart"></strong>
+            </div>
+
+            <div class="report-totals">
+                <div>
+                    <span>Gross sales</span>
+                    <strong id="reportGross">$0.00</strong>
+                </div>
+                <div>
+                    <span>Transactions</span>
+                    <strong id="reportTransactions">0</strong>
+                </div>
+                <div>
+                    <span>Items sold</span>
+                    <strong id="reportItems">0</strong>
+                </div>
+            </div>
+
+            <div class="report-columns">
+                <section>
+                    <h3>Payment summary</h3>
+                    <div id="reportPayments" class="report-lines"></div>
+                </section>
+                <section>
+                    <h3>Item summary</h3>
+                    <div id="reportItemSummary" class="report-lines"></div>
+                </section>
+            </div>
+
+            <div class="report-modal-footer">
+                <button class="btn btn-clear" id="closeReportFooterBtn" type="button">Close</button>
+                <button class="btn btn-checkout" id="printReportBtn" type="button">Print report</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transaction History Modal -->
+    <div class="modal" id="historyModal">
+        <div class="modal-content history-modal-content">
+            <div class="history-modal-header">
+                <div>
+                    <h2>History</h2>
+                    <span class="history-summary" id="historySummary">0 transactions</span>
+                </div>
+                <button class="btn btn-cancel history-close-btn" id="closeHistoryBtn" type="button">Close</button>
+            </div>
+
+            <div class="history-toolbar">
+                <div class="history-filter-row">
+                    <label for="historySearch">Search</label>
+                    <input id="historySearch" type="search" placeholder="Invoice or item">
+                </div>
+                <div class="history-filter-row">
+                    <label for="historyFrom">From</label>
+                    <input id="historyFrom" type="date">
+                </div>
+                <div class="history-filter-row">
+                    <label for="historyTo">To</label>
+                    <input id="historyTo" type="date">
+                </div>
+                <div class="history-filter-row">
+                    <label for="historyPayment">Payment</label>
+                    <select id="historyPayment">
+                        <option value="">All methods</option>
+                        <option value="Cash">Cash</option>
+                        <option value="NETS">NETS</option>
+                        <option value="PayNow">PayNow</option>
+                        <option value="Visa/Mastercard">Visa/Mastercard</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="history-actions">
+                <button class="btn btn-clear" id="exportHistoryCsvBtn" type="button">Export CSV</button>
+                <button class="btn btn-clear" id="exportHistoryJsonBtn" type="button">Export JSON</button>
+                <button class="btn btn-clear" id="importHistoryBtn" type="button">Import</button>
+                <button class="btn btn-clear" id="historyBinBtn" type="button">Bin</button>
+                <button class="btn btn-clear" id="deleteAllHistoryBtn" type="button">Delete All</button>
+                <input id="historyImportFile" type="file" accept=".json,.csv,application/json,text/csv" hidden>
+            </div>
+
+            <div class="history-list" id="historyList">
+                <div class="history-empty">No transactions found</div>
+            </div>
+
+            <button class="btn btn-cancel history-load-btn" id="historyLoadMoreBtn" type="button" hidden>Load more</button>
+        </div>
+    </div>
+
+    <!-- Transaction Detail Modal -->
+    <div class="modal" id="historyDetailModal">
+        <div class="modal-content history-detail-modal-content">
+            <div class="history-detail-header">
+                <div>
+                    <h2 id="historyDetailInvoice">Transaction</h2>
+                    <span id="historyDetailDate"></span>
+                </div>
+                <button class="btn btn-cancel history-close-btn" id="closeHistoryDetailBtn" type="button">Close</button>
+            </div>
+            <div id="historyDetailItems" class="history-detail-items"></div>
+            <div class="history-detail-totals">
+                <span>Total</span>
+                <strong id="historyDetailTotal">$0.00</strong>
+            </div>
+            <div class="history-detail-meta">
+                <div><span>Payment</span><strong id="historyDetailPayment"></strong></div>
+                <div><span>Status</span><strong id="historyDetailStatus"></strong></div>
+                <div><span>Print status</span><strong id="historyDetailPrintStatus"></strong></div>
+                <div><span>Reprints</span><strong id="historyDetailReprintCount">0</strong></div>
+            </div>
+            <div class="history-detail-actions">
+                <button class="btn btn-clear" id="closeHistoryDetailFooterBtn" type="button">Close</button>
+                <button class="btn btn-clear" id="deleteHistoryBtn" type="button" hidden>Delete</button>
+                <button class="btn btn-clear" id="restoreHistoryBtn" type="button" hidden>Restore</button>
+                <button class="btn btn-checkout" id="toCartHistoryBtn" type="button">To cart</button>
+                <button class="btn btn-checkout" id="reprintHistoryBtn" type="button">Reprint receipt</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Checkout / Tender Modal -->
+    <div class="modal" id="checkoutModal">
+        <div class="modal-content checkout-modal-content">
+            <h2>Checkout</h2>
+            <div class="checkout-total">
+                <span class="checkout-label">Final Total:</span>
+                <span class="checkout-amount" id="checkoutAmount">$0.00</span>
+            </div>
+            <div class="payment-buttons">
+                <button class="btn btn-payment" data-payment="Cash">Cash</button>
+                <button class="btn btn-payment" data-payment="NETS">NETS</button>
+                <button class="btn btn-payment" data-payment="PayNow">PayNow</button>
+                <button class="btn btn-payment" data-payment="Visa/Mastercard">Visa/Mastercard</button>
+            </div>
+            <button class="btn btn-cancel" id="cancelCheckoutBtn">Cancel</button>
+        </div>
+    </div>
+
+    <!-- PayNow QR Code Modal -->
+    <div class="modal" id="paynowModal">
+        <div class="modal-content paynow-modal-content">
+            <h2>PayNow QR Code</h2>
+            <div class="paynow-container">
+                <div class="paynow-info">
+                    <div class="paynow-amount">
+                        <span class="label">Amount:</span>
+                        <span class="value" id="paynowAmount">$0.00</span>
+                    </div>
+                    <div class="paynow-reference">
+                        <span class="label">Reference:</span>
+                        <span class="value" id="paynowReference">INV0000000000</span>
+                    </div>
+                </div>
+                <div class="paynow-qr-container">
+                    <img src="" id="paynowQR" alt="PayNow QR Code" class="paynow-qr">
+                    <img src="paynow-logo.png" alt="PayNow" class="paynow-logo">
+                </div>
+            </div>
+            <button class="btn btn-success" id="printReceiptBtn">Print Receipt</button>
+            <button class="btn btn-cancel" id="cancelPaynowBtn">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Loading Indicator -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <p id="loadingText">Processing...</p>
+    </div>
+
+    <script src="storage.js"></script>
+    <script src="history.js"></script>
+    <script src="bluetooth.js"></script>
+    <script src="receipt.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
