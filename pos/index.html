@@ -79,7 +79,8 @@
 
             <!-- Cart Actions -->
             <div class="cart-modal-footer">
-                <button class="btn btn-clear" id="closeCartBtn" type="button">Close</button>
+                <button class="btn btn-clear" id="clearCartModalBtn" type="button">Clear</button>
+                <button class="btn btn-cancel" id="closeCartBtn" type="button">Close</button>
             </div>
         </div>
     </div>
@@ -103,6 +104,10 @@
                 <button class="menu-card" type="button" id="historyMenuBtn">
                     <span class="menu-card-title">History</span>
                     <span class="menu-card-note">Transactions and export</span>
+                </button>
+                <button class="menu-card" type="button" id="refundMenuBtn">
+                    <span class="menu-card-title">Refund</span>
+                    <span class="menu-card-note">Record a custom refund</span>
                 </button>
                 <button class="menu-card" type="button" id="setupMenuBtn">
                     <span class="menu-card-title">Setup</span>
@@ -164,8 +169,20 @@
                     <strong id="reportGross">$0.00</strong>
                 </div>
                 <div>
+                    <span>Refunds</span>
+                    <strong id="reportRefunds">$0.00</strong>
+                </div>
+                <div>
+                    <span>Net sales</span>
+                    <strong id="reportNet">$0.00</strong>
+                </div>
+                <div>
                     <span>Transactions</span>
                     <strong id="reportTransactions">0</strong>
+                </div>
+                <div>
+                    <span>Refund count</span>
+                    <strong id="reportRefundCount">0</strong>
                 </div>
                 <div>
                     <span>Items sold</span>
@@ -266,13 +283,51 @@
                 <div><span>Status</span><strong id="historyDetailStatus"></strong></div>
                 <div><span>Print status</span><strong id="historyDetailPrintStatus"></strong></div>
                 <div><span>Reprints</span><strong id="historyDetailReprintCount">0</strong></div>
+                <div id="historyDetailOriginalField" hidden><span>Original invoice</span><strong id="historyDetailOriginal"></strong></div>
             </div>
             <div class="history-detail-actions">
                 <button class="btn btn-clear" id="closeHistoryDetailFooterBtn" type="button">Close</button>
                 <button class="btn btn-clear" id="deleteHistoryBtn" type="button" hidden>Delete</button>
                 <button class="btn btn-clear" id="restoreHistoryBtn" type="button" hidden>Restore</button>
-                <button class="btn btn-checkout" id="toCartHistoryBtn" type="button">To cart</button>
+                <button class="btn btn-checkout" id="refundHistoryBtn" type="button">Refund</button>
                 <button class="btn btn-checkout" id="reprintHistoryBtn" type="button">Reprint receipt</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Refund Modal -->
+    <div class="modal" id="refundModal">
+        <div class="modal-content refund-modal-content">
+            <div class="history-detail-header">
+                <div>
+                    <h2 id="refundTitle">Refund</h2>
+                    <span id="refundSubtitle">Enter a custom refund</span>
+                </div>
+                <button class="btn btn-cancel history-close-btn" id="closeRefundBtn" type="button">Close</button>
+            </div>
+            <div class="refund-items" id="refundItems"></div>
+            <div class="setup-form" id="customRefundFields">
+                <label for="refundAmount">Refund amount</label>
+                <input id="refundAmount" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="0.00">
+            </div>
+            <div class="setup-form">
+                <label for="refundPayment">Refund method</label>
+                <select id="refundPayment">
+                    <option value="Cash">Cash</option>
+                    <option value="NETS">NETS</option>
+                    <option value="PayNow">PayNow</option>
+                    <option value="Visa/Mastercard">Visa/Mastercard</option>
+                    <option value="Alipay">Alipay</option>
+                    <option value="UnionPay">UnionPay</option>
+                </select>
+            </div>
+            <div class="refund-summary">
+                <span>Refund total</span>
+                <strong id="refundTotal">$0.00</strong>
+            </div>
+            <div class="history-detail-actions">
+                <button class="btn btn-clear" id="cancelRefundBtn" type="button">Cancel</button>
+                <button class="btn btn-checkout" id="confirmRefundBtn" type="button">Record refund</button>
             </div>
         </div>
     </div>

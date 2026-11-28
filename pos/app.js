@@ -11,6 +11,7 @@ const App = (() => {
     let historyDetailId = null;
     let historyBinMode = false;
     let activeReport = null;
+    let refundSourceId = null;
 
     /**
      * Initialize the application on page load
@@ -438,8 +439,18 @@ const App = (() => {
             formatReportDateTime(report.openedAt);
         document.getElementById('reportGross').textContent =
             formatMoneyFromCents(report.grossCents);
+        document.getElementById('reportRefunds').textContent =
+            formatMoneyFromCents(report.refundCents || 0);
+        document.getElementById('reportNet').textContent =
+            formatMoneyFromCents(
+                Number.isInteger(report.netCents)
+                    ? report.netCents
+                    : report.grossCents
+            );
         document.getElementById('reportTransactions').textContent =
             String(report.transactionCount);
+        document.getElementById('reportRefundCount').textContent =
+            String(report.refundCount || 0);
         document.getElementById('reportItems').textContent =
             String(report.itemCount);
 
@@ -605,7 +616,12 @@ const App = (() => {
                 list.innerHTML = '<div class="history-empty">No transactions found</div>';
             } else {
                 list.innerHTML = historyRecords.map((record) => {
-                    const statusClass = 'history-status-' + record.status.replace(/[^a-z0-9_-]/gi, '_');
+                    const displayStatus = record.transactionType === 'refund'
+                        ? 'refund'
+                        : record.status.replace(/_/g, ' ');
+                    const statusClass = record.transactionType === 'refund'
+                        ? 'history-status-refund'
+                        : 'history-status-' + record.status.replace(/[^a-z0-9_-]/gi, '_');
                     return `
                         <button class="history-row" type="button" data-history-id="${escapeHtml(record.id)}">
                             <div class="history-row-main">
@@ -614,7 +630,7 @@ const App = (() => {
                             </div>
                             <div class="history-row-meta">
                                 <span class="history-row-payment">${escapeHtml(record.paymentMethod)}</span>
-                                <span class="history-status ${statusClass}">${escapeHtml(record.status.replace(/_/g, ' '))}</span>
+                                <span class="history-status ${statusClass}">${escapeHtml(displayStatus)}</span>
                             </div>
                             <span class="history-row-total">${formatMoneyFromCents(record.totalCents)}</span>
                         </button>
@@ -668,6 +684,10 @@ const App = (() => {
                 String(record.reprintCount || 0);
             document.getElementById('historyDetailTotal').textContent =
                 formatMoneyFromCents(record.totalCents);
+            const isRefund = record.transactionType === 'refund';
+            document.getElementById('historyDetailOriginalField').hidden = !isRefund;
+            document.getElementById('historyDetailOriginal').textContent =
+                record.originalInvoiceNumber || 'Custom refund';
 
             document.getElementById('historyDetailItems').innerHTML =
                 record.items.map((item) => `
@@ -682,19 +702,34 @@ const App = (() => {
 
             const deleteButton = document.getElementById('deleteHistoryBtn');
             const restoreButton = document.getElementById('restoreHistoryBtn');
-            const toCartButton = document.getElementById('toCartHistoryBtn');
+            const refundButton = document.getElementById('refundHistoryBtn');
             const reprintButton = document.getElementById('reprintHistoryBtn');
-
             const closed = record.zClosed === true || !!record.zReportId;
+            const linkedRefunds = isRefund
+                ? []
+                : (await TransactionHistory.getAll()).filter((candidate) =>
+                    candidate.transactionType === 'refund' &&
+                    candidate.originalTransactionId === record.id
+                );
+            const refundedQuantities = {};
+            linkedRefunds.forEach((refund) => refund.items.forEach((item) => {
+                refundedQuantities[item.originalItemIndex] =
+                    (refundedQuantities[item.originalItemIndex] || 0) + Math.abs(item.quantity);
+            }));
+            const hasRefundableItems = record.items.some((item, index) =>
+                item.quantity > (refundedQuantities[index] || 0)
+            );
             if (historyBinMode) {
                 deleteButton.hidden = true;
                 restoreButton.hidden = false;
-                toCartButton.hidden = true;
+                refundButton.hidden = true;
                 reprintButton.hidden = true;
             } else {
                 restoreButton.hidden = true;
-                deleteButton.hidden = closed;
-                toCartButton.hidden = false;
+                deleteButton.hidden = closed || isRefund || linkedRefunds.length > 0;
+                refundButton.hidden = isRefund ||
+                    !['completed', 'print_failed'].includes(record.status) ||
+                    !hasRefundableItems;
                 reprintButton.hidden = false;
             }
 
@@ -740,41 +775,179 @@ const App = (() => {
         }
     };
 
-    const toCartHistoryTransaction = async () => {
-        if (!historyDetailId) return;
+    const closeRefundModal = () => {
+        document.getElementById('refundModal').classList.remove('active');
+        refundSourceId = null;
+    };
 
-        try {
-            const record = await TransactionHistory.getById(historyDetailId);
-            const cart = Storage.getCart();
-
-            record.items.forEach((item) => {
-                const unitPrice = (item.unitPriceCents / 100).toFixed(2);
-                const existing = cart.find((cartItem) =>
-                    cartItem.name === item.name &&
-                    parseFloat(cartItem.price).toFixed(2) === unitPrice
-                );
-                if (existing) {
-                    existing.quantity = (existing.quantity || 1) + item.quantity;
-                } else {
-                    cart.push({
-                        id: Math.random().toString(36).substr(2, 9),
-                        name: item.name,
-                        price: unitPrice,
-                        quantity: item.quantity
-                    });
-                }
+    const updateRefundTotal = () => {
+        let totalCents = 0;
+        if (refundSourceId) {
+            document.querySelectorAll('.refund-quantity').forEach((control) => {
+                const quantity = parseInt(control.dataset.quantity, 10) || 0;
+                totalCents += quantity * Number(control.dataset.unitCents);
             });
+        } else {
+            totalCents = Math.round((parseFloat(document.getElementById('refundAmount').value) || 0) * 100);
+        }
+        document.getElementById('refundTotal').textContent = formatMoneyFromCents(totalCents);
+    };
 
-            Storage.setCart(cart);
-            updateCartDisplay();
-            updateTotalDisplay();
+    const openRefundModal = async (sourceId = null) => {
+        refundSourceId = sourceId;
+        document.getElementById('refundAmount').value = '';
+        const itemsContainer = document.getElementById('refundItems');
+        const customFields = document.getElementById('customRefundFields');
+        itemsContainer.innerHTML = '';
+
+        if (sourceId) {
+            const record = await TransactionHistory.getById(sourceId);
+            if (!record) throw new Error('Original transaction was not found');
+            const records = await TransactionHistory.getAll();
+            const refundedQuantities = {};
+            records
+                .filter((candidate) =>
+                    candidate.transactionType === 'refund' &&
+                    candidate.originalTransactionId === record.id
+                )
+                .forEach((refund) => refund.items.forEach((item) => {
+                    refundedQuantities[item.originalItemIndex] =
+                        (refundedQuantities[item.originalItemIndex] || 0) + Math.abs(item.quantity);
+                }));
+
+            document.getElementById('refundTitle').textContent = 'Refund transaction';
+            document.getElementById('refundSubtitle').textContent =
+                record.invoiceNumber + ' · Full refund selected';
+            document.getElementById('refundPayment').value = record.paymentMethod;
+            customFields.hidden = true;
+            itemsContainer.innerHTML = record.items.map((item, index) => {
+                const remaining = item.quantity - (refundedQuantities[index] || 0);
+                const originalQuantity = item.quantity;
+                return `
+                    <div class="refund-item cart-item">
+                        <div class="refund-item-info cart-item-details">
+                            <strong>${escapeHtml(item.name)}</strong>
+                            <span>${formatMoneyFromCents(item.unitPriceCents)} each</span>
+                        </div>
+                        <div class="cart-item-quantity refund-quantity"
+                            data-item-index="${index}"
+                            data-unit-cents="${item.unitPriceCents}"
+                            data-quantity="${remaining}"
+                            data-max-quantity="${remaining}"
+                            data-original-quantity="${originalQuantity}">
+                            <button class="qty-btn refund-qty-decrease" type="button"
+                                aria-label="Decrease refund quantity for ${escapeHtml(item.name)}">−</button>
+                            <span class="qty-display refund-qty-display">
+                                <span class="refund-current-quantity">${remaining}</span>
+                                <span class="refund-total-quantity"> / ${originalQuantity}</span>
+                            </span>
+                            <button class="qty-btn refund-qty-increase" type="button"
+                                aria-label="Increase refund quantity for ${escapeHtml(item.name)}"
+                                ${remaining <= 0 ? 'disabled' : ''}>+</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            document.querySelectorAll('.refund-quantity').forEach((control) => {
+                const decrease = control.querySelector('.refund-qty-decrease');
+                const increase = control.querySelector('.refund-qty-increase');
+                const currentDisplay = control.querySelector('.refund-current-quantity');
+                const maxQuantity = Number(control.dataset.maxQuantity);
+                const originalQuantity = Number(control.dataset.originalQuantity);
+                const setQuantity = (quantity) => {
+                    const nextQuantity = Math.max(0, Math.min(maxQuantity, quantity));
+                    control.dataset.quantity = String(nextQuantity);
+                    currentDisplay.textContent = String(nextQuantity);
+                    decrease.disabled = nextQuantity === 0;
+                    increase.disabled = nextQuantity >= maxQuantity;
+                    updateRefundTotal();
+                };
+                decrease.addEventListener('click', () => {
+                    setQuantity((Number(control.dataset.quantity) || 0) - 1);
+                });
+                increase.addEventListener('click', () => {
+                    setQuantity((Number(control.dataset.quantity) || 0) + 1);
+                });
+                setQuantity(maxQuantity);
+            });
+        } else {
+            document.getElementById('refundTitle').textContent = 'Custom refund';
+            document.getElementById('refundSubtitle').textContent = 'Refund not linked to a previous transaction';
+            document.getElementById('refundPayment').value = 'Cash';
+            customFields.hidden = false;
+        }
+
+        updateRefundTotal();
+        document.getElementById('refundModal').classList.add('active');
+    };
+
+    const submitRefund = async () => {
+        const confirmButton = document.getElementById('confirmRefundBtn');
+        confirmButton.disabled = true;
+        try {
+            const originalRecord = refundSourceId
+                ? await TransactionHistory.getById(refundSourceId)
+                : null;
+            const selections = Array.from(document.querySelectorAll('.refund-quantity'))
+                .map((control) => ({
+                    itemIndex: Number(control.dataset.itemIndex),
+                    quantity: parseInt(control.dataset.quantity, 10) || 0
+                }));
+            const refund = await TransactionHistory.createRefund({
+                originalRecord,
+                selections,
+                amountCents: Math.round((parseFloat(document.getElementById('refundAmount').value) || 0) * 100),
+                paymentMethod: document.getElementById('refundPayment').value,
+                invoiceNumber: 'REF-' + createInvoiceNumber().substring(3)
+            });
+            await TransactionHistory.save(refund);
+            closeRefundModal();
             closeHistoryDetail();
-            closeHistoryModal();
-            openCartModal();
-            showFeedback('Transaction added to cart');
+            await refreshHistory().catch(() => {});
+
+            const printReceipt = Bluetooth.getStatus().isConnected &&
+                confirm('Refund recorded. Print refund receipt?');
+            if (printReceipt) {
+                try {
+                    showLoading('Printing refund receipt...');
+                    await Bluetooth.printReceipt(
+                        refund.items.map((item) => ({
+                            name: item.name,
+                            quantity: Math.abs(item.quantity),
+                            price: (item.unitPriceCents / 100).toFixed(2)
+                        })),
+                        refund.paymentMethod,
+                        refund.invoiceNumber,
+                        {
+                            refund: true,
+                            originalInvoice: originalRecord ? originalRecord.invoiceNumber : '',
+                            createdAt: refund.createdAt
+                        }
+                    );
+                    await TransactionHistory.patch(refund.id, {
+                        printStatus: 'printed',
+                        printCount: 1
+                    });
+                    showLoading('Refund receipt printed', 1000);
+                } catch (printError) {
+                    hideLoading();
+                    console.error('Refund receipt print failed:', printError);
+                    await TransactionHistory.patch(refund.id, {
+                        printStatus: 'failed'
+                    }).catch((historyError) => {
+                        console.error('Could not record refund print failure:', historyError);
+                    });
+                    alert('The refund was recorded, but the receipt could not be printed. Reprint it from History.');
+                }
+            } else {
+                showFeedback('Refund recorded without printing');
+            }
         } catch (error) {
-            console.error('Could not add transaction to cart:', error);
-            alert('Could not add transaction to cart');
+            hideLoading();
+            console.error('Could not record refund:', error);
+            alert(error.message || 'Could not record refund');
+        } finally {
+            confirmButton.disabled = false;
         }
     };
 
@@ -809,7 +982,9 @@ const App = (() => {
                 {
                     createdAt: record.createdAt,
                     receiptConfig: record.receiptConfig,
-                    reprint: true
+                    reprint: true,
+                    refund: record.transactionType === 'refund',
+                    originalInvoice: record.originalInvoiceNumber
                 }
             );
             await TransactionHistory.patch(record.id, {
@@ -905,6 +1080,9 @@ const App = (() => {
                         grouped.set(invoice, {
                             id: 'import-' + invoice,
                             invoiceNumber: invoice,
+                            transactionType: row['Type'] === 'refund' ? 'refund' : 'sale',
+                            originalTransactionId: row['Original Transaction ID'] || null,
+                            originalInvoiceNumber: row['Original Invoice'] || '',
                             createdAt: row['Created At'] || new Date().toISOString(),
                             paymentMethod: row['Payment Method'] || 'Unknown',
                             status: row['Status'] || 'completed',
@@ -919,7 +1097,10 @@ const App = (() => {
                     }
 
                     const record = grouped.get(invoice);
-                    const quantity = Math.max(1, parseInt(row['Quantity'], 10) || 1);
+                    const parsedQuantity = parseInt(row['Quantity'], 10) || 1;
+                    const quantity = row['Type'] === 'refund'
+                        ? -Math.abs(parsedQuantity)
+                        : Math.max(1, parsedQuantity);
                     const unitPriceCents = Math.round((parseFloat(row['Unit Price SGD']) || 0) * 100);
                     const lineTotalCents = Math.round((parseFloat(row['Line Total SGD']) ||
                         unitPriceCents * quantity / 100) * 100);
@@ -927,7 +1108,10 @@ const App = (() => {
                         name: row['Item'] || 'Unnamed item',
                         quantity,
                         unitPriceCents,
-                        lineTotalCents
+                        lineTotalCents,
+                        originalItemIndex: row['Original Item Index'] === ''
+                            ? null
+                            : Number.parseInt(row['Original Item Index'], 10)
                     });
                 });
                 records = Array.from(grouped.values());
@@ -1019,13 +1203,17 @@ const App = (() => {
                     'Invoice',
                     'Created At',
                     'Payment Method',
+                    'Type',
                     'Status',
                     'Print Status',
                     'Item',
                     'Quantity',
                     'Unit Price SGD',
                     'Line Total SGD',
-                    'Transaction Total SGD'
+                    'Transaction Total SGD',
+                    'Original Transaction ID',
+                    'Original Invoice',
+                    'Original Item Index'
                 ]];
 
                 filtered.forEach((record) => {
@@ -1034,13 +1222,17 @@ const App = (() => {
                             record.invoiceNumber,
                             record.createdAt,
                             record.paymentMethod,
+                            record.transactionType,
                             record.status,
                             record.printStatus,
                             item.name,
                             item.quantity,
                             (item.unitPriceCents / 100).toFixed(2),
                             (item.lineTotalCents / 100).toFixed(2),
-                            (record.totalCents / 100).toFixed(2)
+                            (record.totalCents / 100).toFixed(2),
+                            record.originalTransactionId || '',
+                            record.originalInvoiceNumber || '',
+                            item.originalItemIndex ?? ''
                         ]);
                     });
                 });
@@ -1588,6 +1780,10 @@ const App = (() => {
         if (closeCartBtn) {
             closeCartBtn.addEventListener('click', closeCartModal);
         }
+        const clearCartModalBtn = document.getElementById('clearCartModalBtn');
+        if (clearCartModalBtn) {
+            clearCartModalBtn.addEventListener('click', clearCart);
+        }
         const cartModal = document.getElementById('cartModal');
         if (cartModal) {
             cartModal.addEventListener('click', (e) => {
@@ -1625,6 +1821,16 @@ const App = (() => {
         const saveSetupBtn = document.getElementById('saveSetupBtn');
         if (saveSetupBtn) {
             saveSetupBtn.addEventListener('click', saveSetup);
+        }
+        const refundMenuBtn = document.getElementById('refundMenuBtn');
+        if (refundMenuBtn) {
+            refundMenuBtn.addEventListener('click', () => {
+                closeMenuModal();
+                openRefundModal().catch((error) => {
+                    console.error('Could not open refund:', error);
+                    alert(error.message || 'Could not open refund');
+                });
+            });
         }
         const setupModal = document.getElementById('setupModal');
         if (setupModal) {
@@ -1727,9 +1933,15 @@ const App = (() => {
         if (restoreHistoryBtn) {
             restoreHistoryBtn.addEventListener('click', restoreHistoryTransaction);
         }
-        const toCartHistoryBtn = document.getElementById('toCartHistoryBtn');
-        if (toCartHistoryBtn) {
-            toCartHistoryBtn.addEventListener('click', toCartHistoryTransaction);
+        const refundHistoryBtn = document.getElementById('refundHistoryBtn');
+        if (refundHistoryBtn) {
+            refundHistoryBtn.addEventListener('click', () => {
+                if (!historyDetailId) return;
+                openRefundModal(historyDetailId).catch((error) => {
+                    console.error('Could not open transaction refund:', error);
+                    alert(error.message || 'Could not open refund');
+                });
+            });
         }
         const exportHistoryCsvBtn = document.getElementById('exportHistoryCsvBtn');
         if (exportHistoryCsvBtn) {
@@ -1754,6 +1966,21 @@ const App = (() => {
         const historyBinBtn = document.getElementById('historyBinBtn');
         if (historyBinBtn) {
             historyBinBtn.addEventListener('click', toggleHistoryBin);
+        }
+
+        const closeRefundBtn = document.getElementById('closeRefundBtn');
+        const cancelRefundBtn = document.getElementById('cancelRefundBtn');
+        const confirmRefundBtn = document.getElementById('confirmRefundBtn');
+        const refundAmount = document.getElementById('refundAmount');
+        if (closeRefundBtn) closeRefundBtn.addEventListener('click', closeRefundModal);
+        if (cancelRefundBtn) cancelRefundBtn.addEventListener('click', closeRefundModal);
+        if (confirmRefundBtn) confirmRefundBtn.addEventListener('click', submitRefund);
+        if (refundAmount) refundAmount.addEventListener('input', updateRefundTotal);
+        const refundModal = document.getElementById('refundModal');
+        if (refundModal) {
+            refundModal.addEventListener('click', (e) => {
+                if (e.target.id === 'refundModal') closeRefundModal();
+            });
         }
 
         document.querySelectorAll('[data-menu-action]').forEach(button => {

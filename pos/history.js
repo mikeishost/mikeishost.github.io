@@ -79,7 +79,10 @@ const TransactionHistory = (() => {
 
         const rawItems = Array.isArray(record.items) ? record.items : [];
         const items = rawItems.map((item) => {
-            const quantity = Math.max(1, parseInt(item.quantity, 10) || 1);
+            const parsedQuantity = parseInt(item.quantity, 10) || 1;
+            const quantity = Number.isInteger(item.lineTotalCents) && item.lineTotalCents < 0
+                ? -Math.abs(parsedQuantity)
+                : Math.max(1, parsedQuantity);
             const unitPriceCents = Number.isInteger(item.unitPriceCents)
                 ? item.unitPriceCents
                 : toCents(item.price);
@@ -91,7 +94,10 @@ const TransactionHistory = (() => {
                 name: normalizeText(item.name),
                 quantity,
                 unitPriceCents,
-                lineTotalCents
+                lineTotalCents,
+                originalItemIndex: Number.isInteger(item.originalItemIndex)
+                    ? item.originalItemIndex
+                    : null
             };
         });
 
@@ -100,9 +106,12 @@ const TransactionHistory = (() => {
             : items.reduce((sum, item) => sum + item.lineTotalCents, 0);
 
         return {
-            schemaVersion: 1,
+            schemaVersion: 2,
             id: normalizeText(record.id) || newId(),
             invoiceNumber: normalizeText(record.invoiceNumber),
+            transactionType: record.transactionType === 'refund' ? 'refund' : 'sale',
+            originalTransactionId: normalizeText(record.originalTransactionId) || null,
+            originalInvoiceNumber: normalizeText(record.originalInvoiceNumber),
             createdAt: normalizeText(record.createdAt) || new Date().toISOString(),
             completedAt: normalizeText(record.completedAt) || null,
             updatedAt: normalizeText(record.updatedAt) || new Date().toISOString(),
@@ -159,6 +168,97 @@ const TransactionHistory = (() => {
             zClosedAt: null,
             items,
             totalCents: items.reduce((sum, item) => sum + item.lineTotalCents, 0),
+            currency: 'SGD',
+            receiptConfig: Storage.getReceiptConfig()
+        });
+    };
+
+    const createRefund = async ({ originalRecord = null, selections = [], amountCents = 0, paymentMethod, invoiceNumber }) => {
+        const allRecords = await getAll();
+        const now = new Date().toISOString();
+        let items = [];
+        let refundTotalCents = 0;
+
+        if (originalRecord) {
+            if (originalRecord.transactionType === 'refund') {
+                throw new Error('A refund cannot be refunded again');
+            }
+            if (!['completed', 'print_failed'].includes(originalRecord.status)) {
+                throw new Error('Only completed sales can be refunded');
+            }
+
+            const refundedQuantities = {};
+            allRecords
+                .filter((record) =>
+                    record.transactionType === 'refund' &&
+                    record.originalTransactionId === originalRecord.id
+                )
+                .forEach((refund) => {
+                    refund.items.forEach((item) => {
+                        const index = Number.isInteger(item.originalItemIndex) ? item.originalItemIndex : -1;
+                        refundedQuantities[index] = (refundedQuantities[index] || 0) + Math.abs(item.quantity);
+                    });
+                });
+
+            const selectedQuantities = {};
+            items = selections.map((selection) => {
+                const originalItem = originalRecord.items[selection.itemIndex];
+                const quantity = Math.max(0, parseInt(selection.quantity, 10) || 0);
+                if (!originalItem) throw new Error('Refund item was not found');
+                if (!quantity) return null;
+                const alreadyRefunded = refundedQuantities[selection.itemIndex] || 0;
+                const selectedForItem = selectedQuantities[selection.itemIndex] || 0;
+                if (alreadyRefunded + selectedForItem + quantity > originalItem.quantity) {
+                    throw new Error(`Only ${originalItem.quantity - alreadyRefunded} of "${originalItem.name}" remain refundable`);
+                }
+                selectedQuantities[selection.itemIndex] = selectedForItem + quantity;
+                const lineTotalCents = -originalItem.unitPriceCents * quantity;
+                refundTotalCents += lineTotalCents;
+                return {
+                    name: originalItem.name,
+                    quantity: -quantity,
+                    unitPriceCents: originalItem.unitPriceCents,
+                    lineTotalCents,
+                    originalItemIndex: selection.itemIndex
+                };
+            }).filter(Boolean);
+
+            if (!items.length) throw new Error('Select at least one item to refund');
+        } else {
+            const normalizedAmount = Math.round(Number(amountCents) || 0);
+            if (normalizedAmount <= 0) throw new Error('Enter a refund amount greater than zero');
+            refundTotalCents = -normalizedAmount;
+            items = [{
+                name: 'Manual refund',
+                quantity: -1,
+                unitPriceCents: normalizedAmount,
+                lineTotalCents: -normalizedAmount,
+                originalItemIndex: null
+            }];
+        }
+
+        return normalizeRecord({
+            id: newId(),
+            invoiceNumber: normalizeText(invoiceNumber),
+            transactionType: 'refund',
+            originalTransactionId: originalRecord ? originalRecord.id : null,
+            originalInvoiceNumber: originalRecord ? originalRecord.invoiceNumber : '',
+            createdAt: now,
+            completedAt: now,
+            updatedAt: now,
+            paymentMethod: normalizeText(paymentMethod),
+            status: 'completed',
+            printStatus: 'not_printed',
+            printCount: 0,
+            reprintCount: 0,
+            lastReprintedAt: null,
+            bin: false,
+            deletedAt: null,
+            zClosed: false,
+            zReportId: null,
+            zClosedAt: null,
+            items,
+            totalCents: refundTotalCents,
             currency: 'SGD',
             receiptConfig: Storage.getReceiptConfig()
         });
@@ -327,7 +427,7 @@ const TransactionHistory = (() => {
         });
     };
 
-    const isIncludedSale = (record) =>
+    const isIncludedRecord = (record) =>
         record.status !== 'void' &&
         record.status !== 'pending' &&
         record.status !== 'deleted' &&
@@ -350,22 +450,31 @@ const TransactionHistory = (() => {
         const closedTime = asOf.getTime();
         const periodRecords = records.filter((record) => {
             const createdTime = new Date(record.createdAt).getTime();
-            return createdTime >= openedTime && createdTime <= closedTime && isIncludedSale(record);
+            return createdTime >= openedTime && createdTime <= closedTime && isIncludedRecord(record);
         });
 
         const payments = {};
         const items = {};
         let transactionCount = 0;
+        let refundCount = 0;
         let itemCount = 0;
         let grossCents = 0;
+        let refundCents = 0;
 
         periodRecords.forEach((record) => {
-            transactionCount++;
-            grossCents += Number(record.totalCents) || 0;
+            const isRefund = record.transactionType === 'refund';
+            if (isRefund) {
+                refundCount++;
+                refundCents += Math.abs(Number(record.totalCents) || 0);
+            } else {
+                transactionCount++;
+                grossCents += Number(record.totalCents) || 0;
+            }
             const payment = normalizeText(record.paymentMethod) || 'Unknown';
             payments[payment] = (payments[payment] || 0) + (Number(record.totalCents) || 0);
 
             record.items.forEach((item) => {
+                if (isRefund) return;
                 itemCount += item.quantity;
                 const name = normalizeText(item.name) || 'Unnamed item';
                 if (!items[name]) {
@@ -377,7 +486,7 @@ const TransactionHistory = (() => {
         });
 
         return {
-            schemaVersion: 1,
+            schemaVersion: 2,
             id: type === 'Z'
                 ? 'Z-' + asOf.toISOString()
                 : 'X-' + asOf.toISOString(),
@@ -387,8 +496,11 @@ const TransactionHistory = (() => {
             generatedAt: asOf.toISOString(),
             currency: 'SGD',
             transactionCount,
+            refundCount,
             itemCount,
             grossCents,
+            refundCents,
+            netCents: grossCents - refundCents,
             payments,
             items: Object.values(items).sort((a, b) => b.quantity - a.quantity),
             periodRecordIds: periodRecords.map((record) => record.id)
@@ -451,6 +563,16 @@ const TransactionHistory = (() => {
         const record = await getById(id);
         if (!record) throw new Error('Transaction was not found');
         if (record.zClosed) throw new Error('Closed transactions cannot be deleted');
+        if (record.transactionType === 'refund') {
+            throw new Error('Refund records cannot be deleted');
+        }
+        const hasRefund = (await getAll()).some((candidate) =>
+            candidate.transactionType === 'refund' &&
+            candidate.originalTransactionId === record.id
+        );
+        if (hasRefund) {
+            throw new Error('A sale with linked refunds cannot be moved to the Bin');
+        }
 
         return patch(id, {
             bin: true,
@@ -571,6 +693,7 @@ const TransactionHistory = (() => {
         createRecord,
         save,
         getById,
+        createRefund,
         patch,
         query,
         getAll,

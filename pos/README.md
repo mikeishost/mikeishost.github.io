@@ -31,9 +31,9 @@ Open `index.html` from the server and:
 - CSV and JSON export, including iOS share sheet support where available
 - JSON/CSV history import
 - Receipt reprinting
+- Full, partial, and custom refunds
 - X and Z sales reports
 - Transaction Bin and restore
-- Bring any transaction back into the cart
 
 ## File Map
 

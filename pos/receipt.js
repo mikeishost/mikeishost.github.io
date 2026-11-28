@@ -48,7 +48,7 @@ const Receipt = (() => {
      * Format currency as string
      */
     const formatPrice = (price) => {
-        return '$' + price.toFixed(2);
+        return (price < 0 ? '-$' : '$') + Math.abs(price).toFixed(2);
     };
 
     /**
@@ -143,7 +143,14 @@ const Receipt = (() => {
 
         bytes.push(COMMANDS.BOLD_ON);
         pushLine(padLine('Gross sales', formatMoney(report.grossCents)));
+        const refundCents = Number(report.refundCents) || 0;
+        const netCents = Number.isInteger(report.netCents)
+            ? report.netCents
+            : (Number(report.grossCents) || 0);
+        pushLine(padLine('Refunds', '-' + formatMoney(refundCents)));
+        pushLine(padLine('Net sales', formatMoney(netCents)));
         pushLine(padLine('Transactions', String(report.transactionCount)));
+        pushLine(padLine('Refund count', String(report.refundCount || 0)));
         pushLine(padLine('Items sold', String(report.itemCount)));
         bytes.push(COMMANDS.BOLD_OFF);
         pushLine('--------------------------------');
@@ -179,6 +186,7 @@ const Receipt = (() => {
         }
 
         const receiptBytes = [];
+        const isRefund = options.refund === true;
         const receiptConfig = options.receiptConfig && typeof options.receiptConfig === 'object'
             ? options.receiptConfig
             : Storage.getReceiptConfig();
@@ -212,6 +220,12 @@ const Receipt = (() => {
 
         // Invoice and Date/Time info - Left aligned
         receiptBytes.push(COMMANDS.LEFT);
+        if (isRefund) {
+            receiptBytes.push(COMMANDS.BOLD_ON);
+            receiptBytes.push(stringToBytes('REFUND'));
+            receiptBytes.push(COMMANDS.BOLD_OFF);
+            receiptBytes.push(COMMANDS.LINEFEED);
+        }
         receiptBytes.push(stringToBytes('Invoice: ' + (invoiceNumber || getInvoiceNumber())));
         receiptBytes.push(COMMANDS.LINEFEED);
 
@@ -241,8 +255,8 @@ const Receipt = (() => {
         let total = 0;
         for (let i = 0; i < cartItems.length; i++) {
             const item = cartItems[i];
-            const qty = item.quantity || 1;
-            const unitPrice = parseFloat(item.price) || 0;
+            const qty = Math.abs(item.quantity || 1);
+            const unitPrice = Math.abs(parseFloat(item.price) || 0);
             const lineTotal = unitPrice * qty;
             total += lineTotal;
 
@@ -260,15 +274,20 @@ const Receipt = (() => {
 
         // Total line with bold
         receiptBytes.push(COMMANDS.BOLD_ON);
-        const totalStr = formatPrice(total);
-        const totalLine = padLine('Total', totalStr);
+        const totalStr = formatPrice(isRefund ? -total : total);
+        const totalLine = padLine(isRefund ? 'Refund total' : 'Total', totalStr);
         receiptBytes.push(stringToBytes(totalLine));
         receiptBytes.push(COMMANDS.BOLD_OFF);
         receiptBytes.push(COMMANDS.LINEFEED);
 
         // Payment method
-        receiptBytes.push(stringToBytes('Paid via ' + paymentMethod));
+        receiptBytes.push(stringToBytes((isRefund ? 'Refunded via ' : 'Paid via ') + paymentMethod));
         receiptBytes.push(COMMANDS.LINEFEED);
+
+        if (isRefund && options.originalInvoice) {
+            receiptBytes.push(stringToBytes('Original: ' + options.originalInvoice));
+            receiptBytes.push(COMMANDS.LINEFEED);
+        }
 
         if (options.reprint) {
             receiptBytes.push(stringToBytes('REPRINT'));
