@@ -1609,3 +1609,328 @@ input {
 #totalDisplay {
     -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
 }
+
+/* ============================================
+   LIQUID GLASS THEME
+   ============================================ */
+
+:root {
+    --primary-color: #087cf0;
+    --primary-dark: #0067ce;
+    --secondary-color: #21a366;
+    --background: #e9f1f8;
+    --surface: rgba(255, 255, 255, 0.72);
+    --text-primary: #17202b;
+    --text-secondary: #596777;
+    --border-color: rgba(255, 255, 255, 0.72);
+    --shadow: 0 10px 30px rgba(43, 69, 94, 0.12),
+        inset 0 1px 0 rgba(255, 255, 255, 0.78);
+    --shadow-lg: 0 24px 70px rgba(29, 48, 68, 0.24),
+        inset 0 1px 0 rgba(255, 255, 255, 0.84);
+    --glass-fill: rgba(255, 255, 255, 0.62);
+    --glass-fill-strong: rgba(255, 255, 255, 0.82);
+    --glass-border: rgba(255, 255, 255, 0.78);
+}
+
+html,
+body {
+    background:
+        radial-gradient(circle at 12% 8%, rgba(109, 194, 255, 0.42), transparent 34%),
+        radial-gradient(circle at 88% 18%, rgba(155, 132, 255, 0.26), transparent 30%),
+        radial-gradient(circle at 52% 94%, rgba(88, 220, 169, 0.2), transparent 36%),
+        linear-gradient(145deg, #edf5fc 0%, #ddebf6 48%, #eef0fb 100%);
+}
+
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(115deg, rgba(255, 255, 255, 0.25), transparent 42%);
+    z-index: -1;
+}
+
+.word-cloud-section,
+.manual-entry,
+.cart-list,
+.modal-content,
+.action-bar,
+.cart-modal-header,
+.cart-modal-footer,
+.menu-card,
+.report-period,
+.report-totals div,
+.report-columns section,
+.history-detail-meta div {
+    border: 1px solid var(--glass-border);
+    background: linear-gradient(
+        145deg,
+        rgba(255, 255, 255, 0.78),
+        rgba(255, 255, 255, 0.48)
+    );
+    box-shadow: var(--shadow);
+    -webkit-backdrop-filter: blur(24px) saturate(155%);
+    backdrop-filter: blur(24px) saturate(155%);
+}
+
+.btn,
+.key,
+.qty-btn,
+.word-button,
+.word-button-add,
+.menu-card,
+.cart-item-remove,
+.bluetooth-status,
+.btn-menu {
+    border-radius: 14px;
+    transition: transform 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
+}
+
+.btn {
+    border: 1px solid rgba(255, 255, 255, 0.74);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.58),
+        0 4px 12px rgba(46, 67, 89, 0.1);
+}
+
+.btn:active,
+.key:active,
+.qty-btn:active,
+.word-button:active,
+.word-button-add:active,
+.menu-card:active,
+.cart-item-remove:active {
+    transform: translateY(1px) scale(0.97);
+}
+
+.btn-primary,
+.btn-payment,
+.word-button.selected {
+    border-color: rgba(255, 255, 255, 0.5);
+    background: linear-gradient(145deg, #1591ff, var(--primary-color));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.44),
+        0 8px 18px rgba(8, 124, 240, 0.24);
+}
+
+.btn-checkout,
+.btn-add-custom,
+.btn-save,
+.btn-success,
+.word-button-add {
+    border-color: rgba(255, 255, 255, 0.5);
+    background: linear-gradient(145deg, #2fbc79, var(--secondary-color));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4),
+        0 8px 18px rgba(33, 163, 102, 0.22);
+}
+
+.btn-clear,
+.btn-cancel {
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.84), rgba(231, 237, 244, 0.76));
+    color: #283544;
+}
+
+.btn-danger,
+.cart-item-remove,
+.key.backspace {
+    border-color: rgba(255, 255, 255, 0.44);
+    background: linear-gradient(145deg, #ef5149, var(--danger-color));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35),
+        0 7px 16px rgba(211, 52, 39, 0.2);
+}
+
+.word-cloud-section,
+.manual-entry {
+    border-radius: 22px;
+}
+
+.word-button,
+.word-button-add {
+    border-width: 1px;
+    border-radius: 999px;
+}
+
+.word-button {
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.78), rgba(238, 244, 250, 0.58));
+    border-color: rgba(255, 255, 255, 0.82);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72),
+        0 3px 8px rgba(47, 71, 94, 0.08);
+}
+
+.amount-input,
+.key,
+.setup-form input,
+.setup-form select,
+.history-filter-row input,
+.history-filter-row select,
+.form-group input {
+    border: 1px solid rgba(255, 255, 255, 0.84);
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.76), rgba(237, 244, 251, 0.54));
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.85),
+        inset 0 -1px 0 rgba(42, 68, 93, 0.05),
+        0 4px 12px rgba(50, 72, 95, 0.07);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+    backdrop-filter: blur(16px) saturate(140%);
+}
+
+.amount-input {
+    border-radius: 18px;
+}
+
+.key {
+    min-height: 54px;
+}
+
+.action-bar,
+.cart-modal-header,
+.cart-modal-footer {
+    border-left: 0;
+    border-right: 0;
+    border-bottom: 0;
+    background: linear-gradient(
+        145deg,
+        rgba(255, 255, 255, 0.82),
+        rgba(244, 249, 253, 0.58)
+    );
+}
+
+.action-bar {
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+    box-shadow: 0 -12px 34px rgba(41, 64, 88, 0.12),
+        inset 0 1px 0 rgba(255, 255, 255, 0.86);
+}
+
+.btn-total {
+    border: 0;
+    box-shadow: none;
+}
+
+.modal {
+    background:
+        radial-gradient(circle at 20% 15%, rgba(92, 184, 255, 0.2), transparent 28%),
+        rgba(20, 34, 49, 0.28);
+    -webkit-backdrop-filter: blur(12px) saturate(110%);
+    backdrop-filter: blur(12px) saturate(110%);
+}
+
+.modal-content {
+    border-radius: 28px;
+    background: linear-gradient(
+        145deg,
+        rgba(255, 255, 255, 0.86),
+        rgba(247, 251, 255, 0.66)
+    );
+    box-shadow: var(--shadow-lg);
+}
+
+.cart-modal-content {
+    border-radius: 0;
+}
+
+.cart-modal-header {
+    border-radius: 0;
+}
+
+.cart-modal-footer {
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+    border-radius: 0;
+}
+
+.cart-modal-header #bluetoothStatus,
+.btn-menu {
+    border: 1px solid rgba(255, 255, 255, 0.78);
+    -webkit-backdrop-filter: blur(14px) saturate(145%);
+    backdrop-filter: blur(14px) saturate(145%);
+}
+
+.btn-menu {
+    background: linear-gradient(145deg, rgba(222, 239, 255, 0.88), rgba(204, 225, 249, 0.68));
+}
+
+.menu-card {
+    border-radius: 20px;
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.76), rgba(240, 247, 252, 0.5));
+}
+
+.menu-card:active {
+    background: linear-gradient(145deg, rgba(227, 241, 255, 0.86), rgba(240, 247, 252, 0.6));
+}
+
+.paynow-info,
+.paynow-qr-container,
+.report-period,
+.report-totals div,
+.report-columns section,
+.history-detail-meta div {
+    border-radius: 16px;
+}
+
+.cart-item {
+    border-bottom-color: rgba(91, 110, 128, 0.12);
+}
+
+.qty-btn {
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(224, 234, 244, 0.74));
+    border-color: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 3px 8px rgba(45, 68, 91, 0.09);
+}
+
+.history-row {
+    border-bottom-color: rgba(91, 110, 128, 0.12);
+    background: rgba(255, 255, 255, 0.22);
+}
+
+.history-row:active {
+    background: rgba(226, 240, 252, 0.58);
+}
+
+.history-status {
+    border: 1px solid rgba(255, 255, 255, 0.58);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.48);
+}
+
+.loading-overlay {
+    background: rgba(16, 27, 39, 0.46);
+    -webkit-backdrop-filter: blur(18px) saturate(110%);
+    backdrop-filter: blur(18px) saturate(110%);
+}
+
+@supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+    :root {
+        --surface: rgba(247, 251, 255, 0.96);
+    }
+
+    .word-cloud-section,
+    .manual-entry,
+    .cart-list,
+    .modal-content,
+    .action-bar,
+    .cart-modal-header,
+    .cart-modal-footer,
+    .menu-card {
+        background: #f8fbfe;
+    }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+    .word-cloud-section,
+    .manual-entry,
+    .cart-list,
+    .modal-content,
+    .action-bar,
+    .cart-modal-header,
+    .cart-modal-footer,
+    .menu-card {
+        background: #f8fbfe;
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
