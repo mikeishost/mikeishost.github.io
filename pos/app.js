@@ -1212,8 +1212,8 @@ const App = (() => {
         // Build nested merchant account info (ID 26)
         const merchantAccountInfo = [
             { id: '00', value: 'SG.PAYNOW' },
-            { id: '01', value: '0' }, // 0 for mobile number, 2 for UEN
-            { id: '02', value: '+6581230516' }, // Mobile number with +65 prefix
+            { id: '01', value: '2' }, // 0 for mobile number, 2 for UEN
+            { id: '02', value: '53138257E' }, // Merchant UEN
             { id: '03', value: '0' }, // 0 = amount not editable
             { id: '04', value: '' } // Expiry date (empty = no expiry)
         ];

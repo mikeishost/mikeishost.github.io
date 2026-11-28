@@ -22,9 +22,9 @@ Open `index.html` from the server and:
 ## Core Features
 
 - Word-cloud and custom amount cart entry
-- Cash, NETS, PayNow, and card payment selection
+- Cash, NETS, PayNow, Visa/Mastercard, Alipay, and UnionPay payment selection
 - 32-character, 58 mm ESC/POS receipt formatting
-- PayNow QR checkout
+- PayNow UEN QR checkout
 - Printer reconnect by remembered printer ID and name
 - IndexedDB transaction history
 - Search and date/payment filtering
