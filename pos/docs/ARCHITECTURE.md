@@ -31,6 +31,11 @@ Manages IndexedDB database `st_thomas_pos`:
 
 Transaction values use integer cents. Records include stable IDs, invoice numbers, timestamps, payment status, print status, reprint metadata, item snapshots, receipt configuration, Bin state, and Z-close metadata.
 
+Refunds are separate negative transactions. Linked refunds retain the original
+transaction/invoice reference and source item index; previous sales are
+not modified. Item quantities are signed so refund totals and payment summaries
+can distinguish refunds from sales.
+
 The database uses the IndexedDB upgrade mechanism. Missing fields are normalized when records are read, so older records remain usable.
 
 ### `receipt.js`

@@ -43,10 +43,21 @@ History provides:
 - JSON/CSV import
 - Transaction details
 - Reprint
-- Add transaction items back to the current cart
+- Record a full or partial refund against the transaction
 - Delete an open transaction to the Bin
 
 Export uses the iOS share sheet when Web Share supports files. Otherwise, it downloads the file normally.
+
+## Refunds
+
+Open Menu > Refund to record a custom refund without linking it to an earlier sale.
+To refund a previous transaction, open it in History and select Refund. Select all
+remaining items for a full refund, or choose individual quantities for a partial
+refund.
+
+Refunds create separate negative transactions and do not edit or delete the original
+sale. Repeated partial refunds cannot exceed the original item quantities. Because
+this POS does not track inventory, refunds do not change stock.
 
 ## Bin
 
